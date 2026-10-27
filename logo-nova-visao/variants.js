@@ -3,35 +3,35 @@ window.VARIANTS = {
   "brandName": "nova visão",
   "concepts": [
     {
-      "name": "O logo atual, refinado",
+      "name": "O logo atual, com um ajuste por vez",
       "variants": [
         {
           "id": "A",
-          "name": "Fiel, refinada",
-          "description": "O logo atual com a geometria limpa: lentes e haste redesenhadas, onda com ritmo, letras mais compactas e um til em onda que repete a base do ícone.",
-          "light": "conceitos/A-fiel-refinada/horizontal.svg",
-          "dark": "conceitos/A-fiel-refinada/horizontal-fundo-escuro.svg"
+          "name": "Original refinada",
+          "description": "O logo atual redesenhado com precisão, com as medidas tiradas da sua imagem: mesmas lentes ovais, mesma haste, mesma onda. Só a geometria ficou limpa.",
+          "light": "conceitos/A-original-refinada/horizontal.svg",
+          "dark": "conceitos/A-original-refinada/horizontal-fundo-escuro.svg"
         },
         {
           "id": "B",
-          "name": "Brilho",
-          "description": "Igual à A, com um pequeno reflexo nas lentes que se repete nos dois 'o' do nome. Um detalhe que só esta marca tem.",
-          "light": "conceitos/B-brilho/horizontal.svg",
-          "dark": "conceitos/B-brilho/horizontal-fundo-escuro.svg"
+          "name": "Letra arredondada",
+          "description": "Único ajuste: letras de cantos arredondados (Fredoka), um pouco mais macias que a A. O símbolo não muda.",
+          "light": "conceitos/B-letra-arredondada/horizontal.svg",
+          "dark": "conceitos/B-letra-arredondada/horizontal-fundo-escuro.svg"
         },
         {
           "id": "C",
-          "name": "Onda eco",
-          "description": "Igual à A, com uma segunda onda fina logo abaixo do ícone, como o reflexo na água. A onda ganha presença sem mudar o símbolo.",
-          "light": "conceitos/C-onda-eco/horizontal.svg",
-          "dark": "conceitos/C-onda-eco/horizontal-fundo-escuro.svg"
+          "name": "Nome em café",
+          "description": "Único ajuste: o nome em marrom-café e só o til em laranja. O símbolo e as letras não mudam.",
+          "light": "conceitos/C-nome-em-cafe/horizontal.svg",
+          "dark": "conceitos/C-nome-em-cafe/horizontal-fundo-escuro.svg"
         },
         {
           "id": "D",
-          "name": "Tom sobre tom",
-          "description": "Igual à A, com uma faixa de laranja mais escuro seguindo a onda da base. Mais profundidade e acabamento, ainda com uma cor só.",
-          "light": "conceitos/D-tom-sobre-tom/horizontal.svg",
-          "dark": "conceitos/D-tom-sobre-tom/horizontal-fundo-escuro.svg"
+          "name": "Brilho nas lentes",
+          "description": "Único ajuste: um pequeno reflexo dentro das duas lentes. O resto é idêntico ao original.",
+          "light": "conceitos/D-brilho-nas-lentes/horizontal.svg",
+          "dark": "conceitos/D-brilho-nas-lentes/horizontal-fundo-escuro.svg"
         }
       ]
     }
