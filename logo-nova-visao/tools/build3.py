@@ -161,6 +161,9 @@ def build():
         open(os.path.join(d, "vertical.svg"), "w").write(stacked(v, tl))
         open(os.path.join(d, "vertical-fundo-escuro.svg"), "w").write(stacked(v, DARK))
         open(os.path.join(d, "icone.svg"), "w").write(icon(v))
+        for nome, th in (("simbolo", tl), ("simbolo-branco", REVERSE)):
+            mw, mh, md, mb = mark(v, th)
+            open(os.path.join(d, nome + ".svg"), "w").write(svg_doc(mw, mh, md, mb))
     print("ok")
 
 
