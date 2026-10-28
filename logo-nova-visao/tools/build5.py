@@ -57,11 +57,11 @@ TEMPLE = "M77 23.2L106 31.4"
 TEMPLE_WAVE = "M77 23.5C85 19.5 90 30 98 27S108 33 116 29"
 
 
-def glasses_stroke(color, ring, L, R, temple=TEMPLE, bridge="M30.1 45.7Q36 40.3 41.6 43.6"):
+def glasses_stroke(color, ring, L, R, temple=TEMPLE, bridge="M30.1 45.7Q36 40.3 41.6 43.6", tw=None):
     """Armação desenhada com traços (usada como recorte em máscara ou como traço visível)."""
     return (f'<g fill="none" stroke="{color}" stroke-width="{ring}" stroke-linecap="round">{ell(L)}{ell(R)}'
             f'<path d="{bridge}" stroke-width="{f(ring + 0.3)}"/></g>'
-            f'<path d="{temple}" stroke="{color}" stroke-width="{7 if temple == TEMPLE else 6.4}" stroke-linecap="round" fill="none"/>')
+            f'<path d="{temple}" stroke="{color}" stroke-width="{tw or (7 if temple == TEMPLE else 6.4)}" stroke-linecap="round" fill="none"/>')
 
 
 def glint(color, L, R):
@@ -95,12 +95,12 @@ def mark(spec, th):
     if spec.get("contorno"):
         # símbolo vazado: contorno do quadrado + armação em traço, recortada pelo quadrado
         defs = f'<clipPath id="cl"><path d="{cp}"/></clipPath>'
-        body = (f'<g clip-path="url(#cl)"><g{rot}>{glasses_stroke(cc, ring + 0.6, L, R, temple, bridge)}</g></g>'
+        body = (f'<g clip-path="url(#cl)"><g{rot}>{glasses_stroke(cc, ring + 0.6, L, R, temple, bridge, spec.get("temple_w"))}</g></g>'
                 f'<path d="{cp}" fill="none" stroke="{cc}" stroke-width="5" stroke-linejoin="round"/>')
         return 100, h, defs, body
 
     defs = (f'<mask id="k" maskUnits="userSpaceOnUse" x="-30" y="-30" width="170" height="170">'
-            f'<rect x="-30" y="-30" width="170" height="170" fill="#fff"/><g{rot}>{glasses_stroke("#000", ring, L, R, temple, bridge)}</g></mask>')
+            f'<rect x="-30" y="-30" width="170" height="170" fill="#fff"/><g{rot}>{glasses_stroke("#000", ring, L, R, temple, bridge, spec.get("temple_w"))}</g></mask>')
     inner = ""
     if spec.get("sombra"):
         sh = th["deep"] if th["container"] != WHITE else th["band"]
@@ -181,7 +181,7 @@ def horizontal(spec, th, pad=6, mhs=70):
     wb, ww = wordmark(spec, xh, th, x0, base)
     extra = ""
     if spec.get("tag"):
-        tg = shape("ÓTICA", "Outfit", 11, 500, 0.5, x=x0 + 2, y=base + 17)
+        tg = shape("ÓTICA", "Outfit", 11, 500, 0.5, x=x0 + 2, y=base + 21)
         extra = f'<path d="{tg.d}" fill="{th["tag"]}"/>'
     W, H = pad * 2 + mw * s + gap + ww, max(pad * 2 + mh * s, pad * 2 + mhs)
     return svg_doc(W, H, md, f'<g transform="translate({pad} {pad}) scale({f(s)})">{mb}</g>{wb}{extra}')
