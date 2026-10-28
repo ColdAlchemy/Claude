@@ -99,6 +99,16 @@ def star(cx, cy, r):
             f'L{f(cx)} {f(cy + r)}L{f(cx - k)} {f(cy + k)}L{f(cx - r)} {f(cy)}L{f(cx - k)} {f(cy - k)}Z')
 
 
+def icone_sem_cantos(size=1024):
+    """Ícone de app em quadrado cheio, sem cantos arredondados (iOS e lojas aplicam a máscara)."""
+    th = T["reverse"]
+    mw, mh, md, mb = mark(SMALL, th)
+    s = size * 0.62 / mw
+    ox, oy = (size - mw * s) / 2, (size - mh * s) / 2
+    return svg_doc(size, size, md, f'<rect width="{size}" height="{size}" fill="{ORANGE}"/>'
+                   f'<g transform="translate({f(ox)} {f(oy)}) scale({f(s)})">{mb}</g>')
+
+
 def seal(kind):
     """Selo: borda ondulada, NOVA VISÃO em arco no alto, ÓTICA embaixo, símbolo no centro."""
     C = 120
@@ -156,6 +166,7 @@ def build():
     w("06-avatar-circulo", avatar_circulo())
     w("06-icone-app-quadrado", icon(BASE, T))
     w("06-favicon", icone_pequeno())
+    w("06-icone-app-sem-cantos", icone_sem_cantos())
     # 7. selo
     w("07-selo-laranja", seal("laranja"))
     w("07-selo-contorno", seal("contorno"))

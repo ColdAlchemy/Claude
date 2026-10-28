@@ -1,0 +1,16 @@
+<!-- Cole no <head> do site. Os arquivos estão em 06-avatar-icone-favicon/ -->
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon_180px.png">
+
+<!-- site.webmanifest (Android / PWA) -->
+{
+  "name": "Nova Visão Ótica",
+  "short_name": "Nova Visão",
+  "icons": [
+    { "src": "/android-icon-maskable_192px.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/android-icon-maskable_512px.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "theme_color": "#FF6400",
+  "background_color": "#FFFFFF"
+}
