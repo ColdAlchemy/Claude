@@ -63,36 +63,64 @@ def icone_pequeno(size=128):
                    f'<g transform="translate({f(ox)} {f(oy)}) scale({f(s)})">{mb}</g>')
 
 
-def seal(kind):
-    """Selo circular: NOVA VISÃO · ÓTICA em volta do símbolo."""
-    fill_disc = kind == "laranja"
-    ink = WHITE if fill_disc else ORANGE
-    th = T["reverse"] if fill_disc else T["light"]
-    C, R = 110, 74
-    txt = "NOVA VISÃO • ÓTICA • "
-    probe = shape(txt, "Outfit", 20, 650, 0.08)
-    tot = sum(g.adv for g in probe.glyphs)
-    size = 20 * (2 * math.pi * R) / tot
-    run = shape(txt, "Outfit", size, 650, 0.08)
-    # centraliza "NOVA VISÃO" no topo
-    mid_first = (run.glyphs[0].x + run.glyphs[9].x + run.glyphs[9].adv) / 2
-    off = -mid_first / R
-    parts = ""
+def scallop(cx, cy, R, n=30, k=0.54):
+    """Borda ondulada (festonada): n arcos levemente salientes ao redor do círculo."""
+    chord = 2 * R * math.sin(math.pi / n)
+    r = chord * k
+    pts = [(cx + R * math.sin(2 * math.pi * i / n), cy - R * math.cos(2 * math.pi * i / n)) for i in range(n)]
+    d = f"M{f(pts[0][0])} {f(pts[0][1])}"
+    for i in range(1, n + 1):
+        x, y = pts[i % n]
+        d += f"A{f(r)} {f(r)} 0 0 1 {f(x)} {f(y)}"
+    return d + "Z"
+
+
+def arc_text(text, size, tracking, R, top, weight=700):
+    """Texto em arco. top=True: no alto, lendo para fora; top=False: embaixo, de pé, lendo da esquerda para a direita."""
+    run = shape(text, "Outfit", size, weight, tracking)
+    Wt = run.width
+    out = []
     for g in run.glyphs:
         if not g.d or g.ch == " ":
             continue
-        m = g.x + g.adv / 2
-        ang = math.degrees(m / R + off)
-        parts += f'<path d="{g.d}" transform="translate({C} {C}) rotate({f(ang)}) translate({f(-m)} {-R})" fill="{ink}"/>'
-    mw, mh, md, mb = mark(SMALL, th)
-    s = 74 / mw
+        m = g.x + g.adv / 2 - tracking * size / 2
+        off = (m - Wt / 2) / R
+        if top:
+            out.append(f'<path d="{g.d}" transform="translate(120 120) rotate({f(math.degrees(off))}) translate({f(-m)} {-R})"/>')
+        else:
+            out.append(f'<path d="{g.d}" transform="translate(120 120) rotate({f(-math.degrees(off))}) translate({f(-m)} {R})"/>')
+    return "".join(out)
+
+
+def star(cx, cy, r):
+    """Estrela de 4 pontas (separador)."""
+    k = r * 0.28
+    return (f'M{f(cx)} {f(cy - r)}L{f(cx + k)} {f(cy - k)}L{f(cx + r)} {f(cy)}L{f(cx + k)} {f(cy + k)}'
+            f'L{f(cx)} {f(cy + r)}L{f(cx - k)} {f(cy + k)}L{f(cx - r)} {f(cy)}L{f(cx - k)} {f(cy - k)}Z')
+
+
+def seal(kind):
+    """Selo: borda ondulada, NOVA VISÃO em arco no alto, ÓTICA embaixo, símbolo no centro."""
+    C = 120
+    cfg = {
+        "laranja": dict(disc=ORANGE, ink=WHITE, core=CREAM, sym=T["light"], sym_spec=SMALL),
+        "contorno": dict(disc=None, ink=ORANGE, core=None, sym=T["light"], sym_spec=SMALL),
+        "cafe": dict(disc=ESPRESSO, ink=CREAM, core=CREAM, sym=T["light"], sym_spec=dict(SMALL, mark="espresso")),
+    }[kind]
+    ink, disc, core = cfg["ink"], cfg["disc"], cfg["core"]
     body = ""
-    if fill_disc:
-        body += f'<circle cx="{C}" cy="{C}" r="106" fill="{ORANGE}"/>'
-    body += (f'<circle cx="{C}" cy="{C}" r="100" fill="none" stroke="{ink}" stroke-width="1.6"/>'
-             f'<circle cx="{C}" cy="{C}" r="54" fill="none" stroke="{ink}" stroke-width="1.6"/>{parts}'
-             f'<g transform="translate({f(C - mw * s / 2)} {f(C - mh * s / 2)}) scale({f(s)})">{mb}</g>')
-    return svg_doc(220, 220, md, body)
+    if disc:
+        body += f'<path d="{scallop(C, C, 112)}" fill="{disc}"/>'
+    else:
+        body += f'<path d="{scallop(C, C, 110)}" fill="none" stroke="{ink}" stroke-width="2.6" stroke-linejoin="round"/>'
+    body += f'<circle cx="{C}" cy="{C}" r="97" fill="none" stroke="{ink}" stroke-width="1.6"/>'
+    body += f'<circle cx="{C}" cy="{C}" r="68" fill="{core or "none"}" stroke="{ink if not core else "none"}" stroke-width="1.6"/>'
+    body += f'<g fill="{ink}">{arc_text("NOVA VISÃO", 19, 0.16, 77, True)}{arc_text("ÓTICA", 19, 0.4, 90, False)}'
+    body += f'<path d="{star(C - 83, C, 6)}"/><path d="{star(C + 83, C, 6)}"/></g>'
+    mw, mh, md, mb = mark(cfg["sym_spec"], cfg["sym"])
+    s = 84 / mw
+    body += f'<g transform="translate({f(C - mw * s / 2)} {f(C - mh * s / 2)}) scale({f(s)})">{mb}</g>'
+    return svg_doc(240, 240, md, body)
 
 
 def build():
@@ -131,6 +159,7 @@ def build():
     # 7. selo
     w("07-selo-laranja", seal("laranja"))
     w("07-selo-contorno", seal("contorno"))
+    w("07-selo-cafe", seal("cafe"))
     print("ok", len(os.listdir(OUT)))
 
 

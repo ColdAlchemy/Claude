@@ -7,4 +7,4 @@ A logo é a **Original refinada**: o logo atual redesenhado com as medidas tirad
 - `sistema/*.svg`: arquivos vetoriais (texto em curvas). `sistema/png/`: PNGs prontos, com fundo transparente, e o conjunto de favicon, ícone de app e avatar.
 - `tools/`: gerador (`python3 tools/sistema.py`). Fontes (OFL, Google Fonts): Outfit e Fredoka. `referencia-atual.jpg` é a imagem enviada.
 
-Formatos: horizontal (cor, fundo escuro, sobre laranja ou foto, uma cor café), com assinatura ÓTICA (embaixo e em linha), vertical, símbolo (e versão de traço reforçado para tamanhos pequenos), só o nome, avatar circular, ícone de app, favicon e selos.
+Formatos: horizontal (cor, fundo escuro, sobre laranja ou foto, uma cor café), com assinatura ÓTICA (embaixo e em linha), vertical, símbolo (e versão de traço reforçado para tamanhos pequenos), só o nome, avatar circular, ícone de app, favicon e selos (laranja, em contorno e café, com borda ondulada).
