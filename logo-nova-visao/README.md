@@ -15,3 +15,7 @@ Cada pasta em `conceitos/` tem: `horizontal`, `horizontal-fundo-escuro`, `horizo
 - `visao-geral.png` / `.html`: comparação lado a lado.
 - `preview.html` + `variants.js`: preview da skill (tamanhos 16/32/64, favicon, navbar).
 - `tools/`: gerador (`python3 tools/build3.py`). Fontes (OFL, Google Fonts): Outfit e Fredoka. `referencia-atual.jpg` é a imagem enviada.
+
+## Variações da A
+
+`variacoes-A/` (`variacoes-A.html` / `.png` para ver todas): A00 é a original refinada sem mudança; A01 a A09 mudam um ou dois detalhes cada (nome em café, brilho, pingo e til âmbar, letra mais leve, assinatura ÓTICA, tom sobre tom, onda eco, lentes claras, cantos suaves). Gerador: `python3 tools/build4.py`.

@@ -68,10 +68,10 @@ def tilde(cx, y, width, sw, amp, color):
 
 
 SPEC = {
-    "base": dict(font="Outfit", weight=790, tracking=-0.008, til="fonte", soft=0.04),
+    "base": dict(font="Outfit", weight=775, tracking=0.034, til="fonte", soft=0.035),
     "suave": dict(font="Fredoka", weight=700, tracking=-0.01, til="fonte"),
-    "tom": dict(font="Outfit", weight=790, tracking=-0.008, til="custom", soft=0.04),
-    "brilho": dict(font="Outfit", weight=790, tracking=-0.008, til="fonte", soft=0.04),
+    "tom": dict(font="Outfit", weight=775, tracking=0.034, til="custom", soft=0.035),
+    "brilho": dict(font="Outfit", weight=775, tracking=0.034, til="fonte", soft=0.035),
 }
 
 
