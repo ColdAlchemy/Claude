@@ -1,21 +1,10 @@
-# Nova Visão · exploração de logo
+# Nova Visão · versões do logo original refinado
 
-Refinamento do logo atual, feitos com a skill `opendesign/svg-design` (tryopendata/skills).
-DNA mantido: óculos redondo, onda, laranja `#FF6400`, minúsculas. Wordmarks em curvas (sem dependência de fonte).
+Todas partem do logo atual, redesenhado com as medidas tiradas da imagem original (lentes, aro, haste, onda, cantos). Cada versão muda um ou dois detalhes.
 
-Réplica fiel do logo atual (medidas tiradas da imagem original) e três variações de **um único ajuste** cada:
+- `versoes.html` / `versoes-ja-vistas.png` / `versoes-novas.png`: pranchas para comparar.
+- `versoes/<id>/`: `horizontal`, `horizontal-fundo-escuro`, `horizontal-branco` (para fundo laranja), `vertical`, `vertical-fundo-escuro`, `icone`, `simbolo`, `simbolo-branco` (SVG, texto em curvas).
+- `preview.html` + `variants.js`: preview da skill `svg-design` (tamanhos 16/32/64, favicon, navbar).
+- `tools/`: gerador (`python3 tools/build5.py`). Fontes (OFL, Google Fonts): Outfit e Fredoka. `referencia-atual.jpg` é a imagem enviada.
 
-- **A · Original refinada**: mesma geometria, desenhada com precisão. Referência para comparar.
-- **B · Letra arredondada**: só troca a fonte por uma de cantos mais macios (Fredoka).
-- **C · Nome em café**: só o nome em marrom-café, com o til em laranja.
-- **D · Brilho nas lentes**: só um reflexo dentro das duas lentes.
-
-Cada pasta em `conceitos/` tem: `horizontal`, `horizontal-fundo-escuro`, `horizontal-branco` (para fundo laranja), `vertical`, `vertical-fundo-escuro` e `icone`.
-
-- `visao-geral.png` / `.html`: comparação lado a lado.
-- `preview.html` + `variants.js`: preview da skill (tamanhos 16/32/64, favicon, navbar).
-- `tools/`: gerador (`python3 tools/build3.py`). Fontes (OFL, Google Fonts): Outfit e Fredoka. `referencia-atual.jpg` é a imagem enviada.
-
-## Variações da A
-
-`variacoes-A/` (`variacoes-A.html` / `.png` para ver todas): A00 é a original refinada sem mudança; A01 a A09 mudam um ou dois detalhes cada (nome em café, brilho, pingo e til âmbar, letra mais leve, assinatura ÓTICA, tom sobre tom, onda eco, lentes claras, cantos suaves). Gerador: `python3 tools/build4.py`.
+V01–V11: original e as versões já apresentadas. V12–V24: combinações, aro fino/grosso, inclinação, onda mais marcada, outros laranjas, nome em laranja escuro, monocromática café e til em onda.
