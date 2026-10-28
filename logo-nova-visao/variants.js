@@ -3,7 +3,7 @@ window.VARIANTS = {
   "brandName": "nova visão",
   "concepts": [
     {
-      "name": "As que você já viu",
+      "name": "Já apresentadas (V01 a V24)",
       "variants": [
         {
           "id": "V01",
@@ -81,12 +81,7 @@ window.VARIANTS = {
           "description": "Só os cantos do quadrado ficam mais arredondados.",
           "light": "versoes/V11-cantos-suaves/horizontal.svg",
           "dark": "versoes/V11-cantos-suaves/horizontal-fundo-escuro.svg"
-        }
-      ]
-    },
-    {
-      "name": "Novas",
-      "variants": [
+        },
         {
           "id": "V12",
           "name": "Arredondada + café",
@@ -177,6 +172,95 @@ window.VARIANTS = {
           "description": "Nome em café e a faixa mais escura na onda.",
           "light": "versoes/V24-cafe-tom/horizontal.svg",
           "dark": "versoes/V24-cafe-tom/horizontal-fundo-escuro.svg"
+        }
+      ]
+    },
+    {
+      "name": "Novas (V25 a V36)",
+      "variants": [
+        {
+          "id": "V25",
+          "name": "Letras com respiro",
+          "description": "A mesma letra, com um fio mais de espaço entre elas. Lê melhor em tamanho grande.",
+          "light": "versoes/V25-respiro/horizontal.svg",
+          "dark": "versoes/V25-respiro/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V26",
+          "name": "Letra mais pesada",
+          "description": "Um degrau a mais de peso: ainda mais compacta e forte.",
+          "light": "versoes/V26-mais-pesada/horizontal.svg",
+          "dark": "versoes/V26-mais-pesada/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V27",
+          "name": "Lentes circulares",
+          "description": "As lentes ovais viram círculos perfeitos, sem mexer em mais nada.",
+          "light": "versoes/V27-lentes-circulares/horizontal.svg",
+          "dark": "versoes/V27-lentes-circulares/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V28",
+          "name": "Haste em onda",
+          "description": "A haste dos óculos ondula, repetindo a onda da base.",
+          "light": "versoes/V28-haste-onda/horizontal.svg",
+          "dark": "versoes/V28-haste-onda/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V29",
+          "name": "Símbolo em contorno",
+          "description": "O quadrado vira contorno e a armação em traço: mais leve, bom para uso em uma cor.",
+          "light": "versoes/V29-contorno/horizontal.svg",
+          "dark": "versoes/V29-contorno/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V30",
+          "name": "Sombra dura",
+          "description": "Uma sombra sólida deslocada atrás do ícone, sem desfoque.",
+          "light": "versoes/V30-sombra-dura/horizontal.svg",
+          "dark": "versoes/V30-sombra-dura/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V31",
+          "name": "Brilho + tom sobre tom",
+          "description": "Reflexo nas lentes e faixa escura na onda.",
+          "light": "versoes/V31-brilho-tom/horizontal.svg",
+          "dark": "versoes/V31-brilho-tom/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V32",
+          "name": "Brilho + lentes claras",
+          "description": "Lentes em tom claro com o reflexo por cima.",
+          "light": "versoes/V32-brilho-lentes/horizontal.svg",
+          "dark": "versoes/V32-brilho-lentes/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V33",
+          "name": "Assinatura + café",
+          "description": "Nome em marrom-café com a palavra ÓTICA embaixo.",
+          "light": "versoes/V33-assinatura-cafe/horizontal.svg",
+          "dark": "versoes/V33-assinatura-cafe/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V34",
+          "name": "Laranja queimado + brilho",
+          "description": "O laranja mais fechado com o reflexo nas lentes.",
+          "light": "versoes/V34-queimado-brilho/horizontal.svg",
+          "dark": "versoes/V34-queimado-brilho/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V35",
+          "name": "Só o til âmbar",
+          "description": "Apenas o til do ã em âmbar, o resto igual.",
+          "light": "versoes/V35-til-ambar/horizontal.svg",
+          "dark": "versoes/V35-til-ambar/horizontal-fundo-escuro.svg"
+        },
+        {
+          "id": "V36",
+          "name": "Arredondada + brilho",
+          "description": "Letra arredondada com o reflexo nas lentes.",
+          "light": "versoes/V36-arredondada-brilho/horizontal.svg",
+          "dark": "versoes/V36-arredondada-brilho/horizontal-fundo-escuro.svg"
         }
       ]
     }

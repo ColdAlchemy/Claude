@@ -53,13 +53,18 @@ def ell(e, extra=""):
             f'transform="rotate({e["rot"]} {e["cx"]} {e["cy"]})"{extra}/>')
 
 
-def knock(ring):
-    return (f'<g fill="none" stroke="#000" stroke-width="{ring}" stroke-linecap="round">{ell(LEFT)}{ell(RIGHT)}'
-            f'<path d="M30.1 45.7Q36 40.3 41.6 43.6" stroke-width="{f(ring + 0.3)}"/></g>'
-            f'<path d="M77 23.2L106 31.4" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none"/>')
+TEMPLE = "M77 23.2L106 31.4"
+TEMPLE_WAVE = "M77 23.5C85 19.5 90 30 98 27S108 33 116 29"
 
 
-def glint(color):
+def glasses_stroke(color, ring, L, R, temple=TEMPLE, bridge="M30.1 45.7Q36 40.3 41.6 43.6"):
+    """Armação desenhada com traços (usada como recorte em máscara ou como traço visível)."""
+    return (f'<g fill="none" stroke="{color}" stroke-width="{ring}" stroke-linecap="round">{ell(L)}{ell(R)}'
+            f'<path d="{bridge}" stroke-width="{f(ring + 0.3)}"/></g>'
+            f'<path d="{temple}" stroke="{color}" stroke-width="{7 if temple == TEMPLE else 6.4}" stroke-linecap="round" fill="none"/>')
+
+
+def glint(color, L, R):
     def arc(e):
         rx, ry = e["rx"] - 5.2, e["ry"] - 5.2
         a0, a1 = math.radians(205), math.radians(250)
@@ -67,36 +72,59 @@ def glint(color):
         (x0, y0), (x1, y1) = p(a0), p(a1)
         return (f'<path d="M{f(x0)} {f(y0)}A{f(rx)} {f(ry)} 0 0 1 {f(x1)} {f(y1)}" '
                 f'transform="rotate({e["rot"]} {e["cx"]} {e["cy"]})"/>')
-    return f'<g fill="none" stroke="{color}" stroke-width="2.2" stroke-linecap="round">{arc(LEFT)}{arc(RIGHT)}</g>'
+    return f'<g fill="none" stroke="{color}" stroke-width="2.2" stroke-linecap="round">{arc(L)}{arc(R)}</g>'
 
 
 def mark(spec, th):
     w = spec.get("wave", 1.0)
     ring = spec.get("ring", RING0)
     tilt = spec.get("tilt", 0)
+    L, R = LEFT, RIGHT
+    if spec.get("circular"):
+        L = dict(LEFT, rx=17.2, ry=17.2, rot=0, cy=56.5)
+        R = dict(RIGHT, rx=20.1, ry=20.1, rot=0)
+    temple = TEMPLE_WAVE if spec.get("haste_onda") else TEMPLE
+    bridge = "M28.6 45.4Q35.2 40.4 41.6 44.6" if spec.get("circular") else "M30.1 45.7Q36 40.3 41.6 43.6"
     h = 106 if spec.get("ripple") else (86.75 + 6.25 * w)
     rot = f' transform="rotate({tilt} 40 46)"' if tilt else ""
-    defs = (f'<mask id="k" maskUnits="userSpaceOnUse" x="-30" y="-30" width="170" height="170">'
-            f'<rect x="-30" y="-30" width="170" height="170" fill="#fff"/><g{rot}>{knock(ring)}</g></mask>')
     cp = container_path(spec.get("radius", 11.5), w)
     mk = spec.get("mark", "orange")
     cc = th["container"] if mk == "orange" else th[mk]
-    inner = f'<path d="{cp}" fill="{cc}"/>'
+    wd = 100
+
+    if spec.get("contorno"):
+        # símbolo vazado: contorno do quadrado + armação em traço, recortada pelo quadrado
+        defs = f'<clipPath id="cl"><path d="{cp}"/></clipPath>'
+        body = (f'<g clip-path="url(#cl)"><g{rot}>{glasses_stroke(cc, ring + 0.6, L, R, temple, bridge)}</g></g>'
+                f'<path d="{cp}" fill="none" stroke="{cc}" stroke-width="5" stroke-linejoin="round"/>')
+        return 100, h, defs, body
+
+    defs = (f'<mask id="k" maskUnits="userSpaceOnUse" x="-30" y="-30" width="170" height="170">'
+            f'<rect x="-30" y="-30" width="170" height="170" fill="#fff"/><g{rot}>{glasses_stroke("#000", ring, L, R, temple, bridge)}</g></mask>')
+    inner = ""
+    if spec.get("sombra"):
+        sh = th["deep"] if th["container"] != WHITE else th["band"]
+        if th["container"] != WHITE:
+            sh = mix(cc, "#000000", 0.26)
+        inner += f'<path d="{cp}" fill="{sh}" transform="translate(3.2 3.6)"/>'
+        wd, h = 104, h + 4
+    inner += f'<path d="{cp}" fill="{cc}"/>'
     if spec.get("band"):
         defs += f'<clipPath id="cc"><path d="{cp}"/></clipPath>'
-        inner += f'<g clip-path="url(#cc)"><path d="{BAND}" fill="{th["band"] if mk == "orange" else mix(cc, "#000000", 0.25) if th["container"] != WHITE else th["band"]}"/></g>'
+        bc = th["band"] if mk == "orange" else (mix(cc, "#000000", 0.25) if th["container"] != WHITE else th["band"])
+        inner += f'<g clip-path="url(#cc)"><path d="{BAND}" fill="{bc}"/></g>'
     body = f'<g mask="url(#k)">{inner}</g>'
     extra = ""
     if spec.get("lens"):
-        for e in (LEFT, RIGHT):
+        for e in (L, R):
             extra += ell(dict(e, rx=f(e["rx"] - ring / 2 + 0.1), ry=f(e["ry"] - ring / 2 + 0.1)), f' fill="{th["lens"]}"')
     if spec.get("glint"):
-        extra += glint(th["glint"])
+        extra += glint(th["glint"], L, R)
     if extra:
         body += f'<g{rot}>{extra}</g>'
     if spec.get("ripple"):
         body += f'<path d="{RIPPLE}" fill="none" stroke="{cc}" stroke-width="4.2" stroke-linecap="round"/>'
-    return 100, h, defs, body
+    return wd, h, defs, body
 
 
 # ---------------------------------------------------------------- wordmark
@@ -113,7 +141,7 @@ def split_dot(d):
     return subs[0], "".join(subs[1:])
 
 
-FONTS = {"geo": dict(font="Outfit", weight=775, tracking=0.034, soft=0.035),
+FONTS = {"geo": dict(font="Outfit", weight=790, tracking=-0.008, soft=0.04),
          "soft": dict(font="Fredoka", weight=700, tracking=-0.01, soft=0.0)}
 
 
@@ -185,7 +213,8 @@ def icon(spec, T, size=128):
 
 # ---------------------------------------------------------------- coleção
 VISTAS = "As que você já viu"
-NOVAS = "Novas"
+NOVAS = "Já apresentadas (novas na rodada anterior)"
+NOVAS2 = "Novas"
 VARIANTS = [
     ("V01-original-refinada", VISTAS, "Original refinada", "O logo atual redesenhado com precisão, sem nenhuma mudança. É a régua das outras.", {}),
     ("V02-letra-arredondada", VISTAS, "Letra arredondada", "Mesmo símbolo, com letras de cantos macios (Fredoka).", dict(fonte="soft", til="fonte")),
@@ -211,6 +240,18 @@ VARIANTS = [
     ("V22-mono-cafe", NOVAS, "Monocromática café", "Símbolo e nome inteiros em marrom-café, para uso sem cor.", dict(mark="espresso", text="espresso", accent="espresso")),
     ("V23-til-em-onda", NOVAS, "Til em onda", "Só o til do ã refeito como uma onda, como a base do ícone.", dict(til="custom")),
     ("V24-cafe-tom", NOVAS, "Café + tom sobre tom", "Nome em café e a faixa mais escura na onda.", dict(text="espresso", til="custom", band=True)),
+    ("V25-respiro", NOVAS2, "Letras com respiro", "A mesma letra, com um fio mais de espaço entre elas. Lê melhor em tamanho grande.", dict(weight=775, tracking=0.034, soft=0.035)),
+    ("V26-mais-pesada", NOVAS2, "Letra mais pesada", "Um degrau a mais de peso: ainda mais compacta e forte.", dict(weight=850, tracking=-0.014, soft=0.045)),
+    ("V27-lentes-circulares", NOVAS2, "Lentes circulares", "As lentes ovais viram círculos perfeitos, sem mexer em mais nada.", dict(circular=True)),
+    ("V28-haste-onda", NOVAS2, "Haste em onda", "A haste dos óculos ondula, repetindo a onda da base.", dict(haste_onda=True)),
+    ("V29-contorno", NOVAS2, "Símbolo em contorno", "O quadrado vira contorno e a armação em traço: mais leve, bom para uso em uma cor.", dict(contorno=True)),
+    ("V30-sombra-dura", NOVAS2, "Sombra dura", "Uma sombra sólida deslocada atrás do ícone, sem desfoque.", dict(sombra=True)),
+    ("V31-brilho-tom", NOVAS2, "Brilho + tom sobre tom", "Reflexo nas lentes e faixa escura na onda.", dict(glint=True, band=True)),
+    ("V32-brilho-lentes", NOVAS2, "Brilho + lentes claras", "Lentes em tom claro com o reflexo por cima.", dict(glint=True, lens=True)),
+    ("V33-assinatura-cafe", NOVAS2, "Assinatura + café", "Nome em marrom-café com a palavra ÓTICA embaixo.", dict(tag=True, text="espresso", til="custom")),
+    ("V34-queimado-brilho", NOVAS2, "Laranja queimado + brilho", "O laranja mais fechado com o reflexo nas lentes.", dict(orange="#F2530C", glint=True)),
+    ("V35-til-ambar", NOVAS2, "Só o til âmbar", "Apenas o til do ã em âmbar, o resto igual.", dict(til="custom", accent="amber")),
+    ("V36-arredondada-brilho", NOVAS2, "Arredondada + brilho", "Letra arredondada com o reflexo nas lentes.", dict(fonte="soft", glint=True, til="fonte")),
 ]
 
 
