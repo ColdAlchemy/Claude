@@ -12,9 +12,10 @@ navegador). Três modos (botões no topo da tela do celular):
 - **Toque:** a tela do celular vira um touchpad.
 
 ## Status
-`em andamento` — modo Toque já usado no PC real. Modos Base e Ar testados na
-nuvem com câmera e sensores simulados; **o modo Base ainda não foi testado com
-a câmera de um celular de verdade** (é o ponto de maior incerteza, ver "Limites").
+`pausado` (2026-10-31) — decisão do usuário após os testes reais. O modo Toque
+funciona; o modo Base (câmera) rastreia, mas ficou abaixo do esperado, e por
+navegador há um teto físico (30–60 leituras/s, ~10–30 cm/s). Para retomar, o
+caminho mais promissor é um app Android nativo (câmera de alta velocidade).
 
 ## Como rodar
 1. No PC, **duplo clique em `iniciar.bat`** (pasta `projetos\celular-mouse`).

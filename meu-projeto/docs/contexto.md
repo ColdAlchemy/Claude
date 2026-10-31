@@ -42,6 +42,6 @@ Resumo do que foi decidido e descoberto, para não precisar refazer.
 
 ## Pendências
 1. Usuário decidir quais skills manter, remover ou criar.
-2. Primeiro projeto criado: `projetos/celular-mouse/` (celular como mouse). Falta testar no PC real.
+2. Primeiro projeto: `projetos/celular-mouse/` (celular como mouse). **Pausado** em 2026-10-31: toque OK; modo Base por câmera ficou abaixo do esperado (teto do navegador). Escolher o próximo projeto.
 3. Opcional: levantar skills locais do PC pelo PowerShell.
 4. Ao aprovar, juntar a branch à principal (nenhum PR foi aberto).
