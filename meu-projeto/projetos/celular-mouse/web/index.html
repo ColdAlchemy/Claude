@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0e1116">
+<title>Celular Mouse</title>
+<style>
+  :root {
+    --bg: #0e1116; --pad: #161b22; --borda: #262d38; --txt: #e6edf3; --suave: #8b97a6;
+    --ok: #3fb950; --ruim: #f85149; --aviso: #d29922; --acento: #4f9dff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; background: var(--bg); color: var(--txt);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden; overscroll-behavior: none;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  #app {
+    display: flex; flex-direction: column; height: 100dvh; gap: 10px;
+    padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  header { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+  #estado { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 14px; }
+  #ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--ruim); }
+  #ponto.ok { background: var(--ok); }
+  #ponto.espera { background: var(--aviso); }
+  .icone {
+    width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--borda);
+    background: var(--pad); color: var(--txt); font-size: 20px; display: grid; place-items: center;
+  }
+
+  #area { position: relative; flex: 1; display: flex; gap: 10px; min-height: 0; }
+  #pad {
+    flex: 1; position: relative; border-radius: 18px; border: 1px solid var(--borda);
+    background: radial-gradient(circle at 50% 40%, #1b222c, var(--pad));
+    display: grid; place-items: center; overflow: hidden;
+  }
+  #pad.ativo { border-color: var(--acento); }
+  #dica { color: var(--suave); text-align: center; padding: 0 24px; font-size: 15px; line-height: 1.7; pointer-events: none; transition: opacity .3s; }
+  #dica b { color: var(--txt); font-weight: 600; }
+  #dica.some { opacity: 0; }
+  #rolagem {
+    width: 52px; border-radius: 18px; border: 1px solid var(--borda); background: var(--pad);
+    display: grid; place-items: center; color: var(--suave); font-size: 11px; letter-spacing: .08em;
+    writing-mode: vertical-rl; text-orientation: mixed;
+  }
+  #rolagem.ativo { border-color: var(--acento); color: var(--txt); }
+
+  #botoes { display: flex; gap: 10px; height: 20vh; min-height: 96px; max-height: 170px; }
+  .btn {
+    border-radius: 18px; border: 1px solid var(--borda); background: var(--pad); color: var(--suave);
+    display: grid; place-items: center; font-size: 14px; letter-spacing: .04em;
+  }
+  .btn.ativo { background: #1f3b63; border-color: var(--acento); color: var(--txt); }
+  #b0 { flex: 3; } #b2 { flex: 1; } #b1 { flex: 3; }
+
+  #painel {
+    position: fixed; inset: 0; background: rgba(8,10,14,.82); display: none; align-items: flex-end; z-index: 10;
+  }
+  #painel.aberto { display: flex; }
+  #cartao {
+    width: 100%; max-height: 85dvh; overflow: auto; background: var(--pad); border-top: 1px solid var(--borda);
+    border-radius: 22px 22px 0 0; padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+    touch-action: pan-y;
+  }
+  #cartao h2 { margin: 0 0 14px; font-size: 18px; }
+  .linha { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 18px; }
+  .linha label { flex: 0 0 38%; font-size: 15px; }
+  .linha input[type=range] { flex: 1; accent-color: var(--acento); min-width: 0; touch-action: pan-y; }
+  .linha .v { width: 34px; text-align: right; color: var(--suave); font-variant-numeric: tabular-nums; font-size: 14px; }
+  .linha input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--acento); }
+  .acoes { display: flex; gap: 10px; margin-top: 4px; }
+  .acoes button {
+    flex: 1; padding: 14px; border-radius: 12px; border: 1px solid var(--borda);
+    background: var(--bg); color: var(--txt); font: inherit;
+  }
+  .acoes button.principal { background: var(--acento); border-color: var(--acento); color: #04101f; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="estado"><span id="ponto" class="espera"></span><span id="texto">Conectando…</span></div>
+    <button class="icone" id="engrenagem" aria-label="Ajustes">⚙</button>
+  </header>
+
+  <div id="area">
+    <div id="pad">
+      <div id="dica">
+        <b>Arraste</b> para mover<br>
+        <b>Toque</b> = clique · <b>2 dedos tocam</b> = botão direito<br>
+        <b>2 dedos arrastam</b> = rolar<br>
+        <b>Toque duas vezes e arraste</b> = segurar e arrastar
+      </div>
+    </div>
+    <div id="rolagem">ROLAR</div>
+  </div>
+
+  <div id="botoes">
+    <div class="btn" id="b0">ESQUERDO</div>
+    <div class="btn" id="b2">MEIO</div>
+    <div class="btn" id="b1">DIREITO</div>
+  </div>
+</div>
+
+<div id="painel">
+  <div id="cartao">
+    <h2>Ajustes</h2>
+    <div class="linha"><label for="sens">Velocidade</label><input id="sens" type="range" min="0.5" max="6" step="0.1"><span class="v" id="sensV"></span></div>
+    <div class="linha"><label for="acel">Aceleração</label><input id="acel" type="range" min="0" max="1.5" step="0.05"><span class="v" id="acelV"></span></div>
+    <div class="linha"><label for="rol">Rolagem</label><input id="rol" type="range" min="0.5" max="4" step="0.1"><span class="v" id="rolV"></span></div>
+    <div class="linha"><label for="nat">Rolagem natural</label><input id="nat" type="checkbox"></div>
+    <div class="linha"><label for="toque">Tocar para clicar</label><input id="toque" type="checkbox"></div>
+    <div class="linha"><label for="vib">Vibrar ao clicar</label><input id="vib" type="checkbox"></div>
+    <div class="acoes">
+      <button id="tela">Tela cheia</button>
+      <button id="padrao">Restaurar</button>
+      <button id="fechar" class="principal">Pronto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+
+  // ---------- ajustes (guardados no celular) ----------
+  var PADRAO = { sens: 2.2, acel: 0.6, rol: 1.5, nat: true, toque: true, vib: true };
+  var cfg = {};
+  function lerLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function gravarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  (function () {
+    var salvo = {};
+    try { salvo = JSON.parse(lerLS('cfg') || '{}'); } catch (e) {}
+    for (var k in PADRAO) cfg[k] = (k in salvo) ? salvo[k] : PADRAO[k];
+  })();
+  function salvarCfg() { gravarLS('cfg', JSON.stringify(cfg)); }
+
+  // ---------- token (vem no link do QR code) ----------
+  var token = new URLSearchParams(location.search).get('t');
+  if (token) gravarLS('token', token); else token = lerLS('token');
+
+  // ---------- conexão ----------
+  var ws = null, aberto = false, jaAbriu = false, falhas = 0, rtt = null;
+  var ponto = $('#ponto'), texto = $('#texto');
+  var pings = {}, pingId = 1;
+
+  function mostrar(cls, msg) { ponto.className = cls; texto.textContent = msg; }
+
+  function conectar() {
+    if (!token) { mostrar('', 'Escaneie o QR code que aparece no PC'); return; }
+    if (ws && (ws.readyState === 0 || ws.readyState === 1)) return;
+    var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    try { ws = new WebSocket(proto + location.host + '/ws?t=' + encodeURIComponent(token)); }
+    catch (e) { agendar(); return; }
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = function () {
+      aberto = true; jaAbriu = true; falhas = 0; rtt = null;
+      mostrar('ok', 'Conectado');
+    };
+    ws.onmessage = function (ev) {
+      var v = new DataView(ev.data);
+      if (v.getUint8(0) !== 5) return;
+      var id = v.getUint32(1, true), t0 = pings[id];
+      if (t0 === undefined) return;
+      delete pings[id];
+      var ms = performance.now() - t0;
+      rtt = rtt === null ? ms : rtt * 0.7 + ms * 0.3;
+      mostrar('ok', 'Conectado · ' + Math.round(rtt) + ' ms');
+    };
+    ws.onclose = function () {
+      var estava = aberto;
+      aberto = false; soltarTudo();
+      if (!estava) falhas++;
+      if (!jaAbriu && falhas >= 3) mostrar('', 'Não conectou. Escaneie o QR de novo.');
+      else mostrar('espera', 'Reconectando…');
+      agendar();
+    };
+    ws.onerror = function () {};
+  }
+  var timer = 0;
+  function agendar() {
+    clearTimeout(timer);
+    timer = setTimeout(conectar, Math.min(300 * (falhas + 1), 2000));
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) conectar(); });
+  setInterval(function () {
+    if (!aberto) return;
+    var id = pingId++, b = new DataView(new ArrayBuffer(5));
+    b.setUint8(0, 5); b.setUint32(1, id, true);
+    pings[id] = performance.now();
+    ws.send(b.buffer);
+    delete pings[id - 5];
+  }, 1000);
+
+  // ---------- envio (buffer reaproveitado: send() copia os dados) ----------
+  var buf = new ArrayBuffer(5), dv = new DataView(buf);
+  function clamp(n) { return n > 32767 ? 32767 : n < -32768 ? -32768 : n; }
+  function enviar2(tipo, a, b) {
+    dv.setUint8(0, tipo); dv.setInt16(1, a, true); dv.setInt16(3, b, true);
+    ws.send(buf);
+  }
+  function botao(i, baixo) {
+    if (!aberto) return;
+    dv.setUint8(0, 2); dv.setUint8(1, i); dv.setUint8(2, baixo ? 1 : 0);
+    ws.send(buf.slice(0, 3));
+  }
+  function vibrar() { if (cfg.vib && navigator.vibrate) navigator.vibrate(8); }
+
+  // Movimento: se a rede engarrafar, acumulamos em vez de empilhar mensagens velhas.
+  var px = 0, py = 0, rx = 0, ry = 0, raf = 0;
+  function mover(fx, fy) {
+    rx += fx; ry += fy;
+    var ix = Math.trunc(rx), iy = Math.trunc(ry);
+    rx -= ix; ry -= iy; px += ix; py += iy;
+    descarregar();
+  }
+  function descarregar() {
+    if (!aberto || (px === 0 && py === 0)) { if (!aberto) { px = py = 0; } return; }
+    if (ws.bufferedAmount > 256) { if (!raf) raf = requestAnimationFrame(function () { raf = 0; descarregar(); }); return; }
+    while (px !== 0 || py !== 0) {
+      var sx = clamp(px), sy = clamp(py);
+      enviar2(1, sx, sy); px -= sx; py -= sy;
+    }
+  }
+  var rolV = 0, rolH = 0;
+  function rolar(dx, dy) {
+    var k = 2.5 * cfg.rol, sinal = cfg.nat ? 1 : -1;
+    rolV += dy * k * sinal; rolH -= dx * k * sinal;
+    var iv = Math.trunc(rolV), ih = Math.trunc(rolH);
+    if (iv === 0 && ih === 0) return;
+    rolV -= iv; rolH -= ih;
+    if (aberto) enviar2(3, clamp(iv), clamp(ih));
+  }
+
+  // ---------- toques no touchpad ----------
+  var pad = $('#pad'), dica = $('#dica');
+  var dedos = {}, n = 0;           // dedos ativos: id -> {x, y, t}
+  var maxDedos = 0, inicio = 0, andou = 0, arrastando = false, ultimoToque = 0, ux = 0, uy = 0;
+  var TOQUE_MS = 250, TOQUE_PX = 12, DUPLO_MS = 300, DUPLO_PX = 40;
+
+  function gesto(ev) {
+    var t = ev.timeStamp;
+    if (n === 1 && maxDedos === 1) {
+      // um dedo: mover. Aceleração depende da velocidade do dedo.
+      var id = ev.pointerId, p = dedos[id];
+      var evs = ev.getCoalescedEvents ? ev.getCoalescedEvents() : null;
+      if (!evs || !evs.length) evs = [ev];
+      for (var i = 0; i < evs.length; i++) {
+        var e = evs[i], dx = e.clientX - p.x, dy = e.clientY - p.y;
+        var dt = Math.min(Math.max(e.timeStamp - p.t, 4), 50);
+        p.x = e.clientX; p.y = e.clientY; p.t = e.timeStamp;
+        andou += Math.abs(dx) + Math.abs(dy);
+        var vel = Math.sqrt(dx * dx + dy * dy) / dt;           // px por ms
+        var ganho = cfg.sens * (1 + cfg.acel * Math.min(vel * 1.2, 3));
+        mover(dx * ganho, dy * ganho);
+      }
+    } else if (n === 2) {
+      // dois dedos: rolar (usa a média do movimento dos dois)
+      var p2 = dedos[ev.pointerId];
+      var ddx = ev.clientX - p2.x, ddy = ev.clientY - p2.y;
+      p2.x = ev.clientX; p2.y = ev.clientY; p2.t = t;
+      andou += Math.abs(ddx) + Math.abs(ddy);
+      rolar(ddx / 2, ddy / 2);
+    } else {
+      var p3 = dedos[ev.pointerId];
+      if (p3) { p3.x = ev.clientX; p3.y = ev.clientY; }
+    }
+  }
+
+  pad.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault();
+    pad.setPointerCapture(ev.pointerId);
+    dica.classList.add('some');
+    dedos[ev.pointerId] = { x: ev.clientX, y: ev.clientY, t: ev.timeStamp };
+    n++;
+    if (n === 1) {
+      pad.classList.add('ativo');
+      maxDedos = 1; inicio = ev.timeStamp; andou = 0;
+      // toque duplo + arrastar: segura o botão esquerdo
+      if (cfg.toque && ev.timeStamp - ultimoToque < DUPLO_MS &&
+          Math.abs(ev.clientX - ux) < DUPLO_PX && Math.abs(ev.clientY - uy) < DUPLO_PX) {
+        arrastando = true; botao(0, true);
+      }
+    } else if (n > maxDedos) {
+      maxDedos = n;
+    }
+  });
+
+  pad.addEventListener('pointermove', function (ev) {
+    if (!dedos[ev.pointerId]) return;
+    ev.preventDefault();
+    gesto(ev);
+  });
+
+  function fim(ev) {
+    if (!dedos[ev.pointerId]) return;
+    delete dedos[ev.pointerId];
+    n--;
+    if (n > 0) return;
+    pad.classList.remove('ativo');
+    var dur = ev.timeStamp - inicio;
+    if (arrastando) {
+      botao(0, false); arrastando = false; ultimoToque = 0;
+    } else if (cfg.toque && ev.type === 'pointerup' && dur < TOQUE_MS && andou < TOQUE_PX) {
+      var b = maxDedos === 1 ? 0 : maxDedos === 2 ? 1 : 2;
+      botao(b, true); botao(b, false); vibrar();
+      if (b === 0) { ultimoToque = ev.timeStamp; ux = ev.clientX; uy = ev.clientY; } else ultimoToque = 0;
+    } else {
+      ultimoToque = 0;
+    }
+    maxDedos = 0;
+  }
+  pad.addEventListener('pointerup', fim);
+  pad.addEventListener('pointercancel', fim);
+
+  // ---------- faixa de rolagem (um dedo) ----------
+  var faixa = $('#rolagem'), faixaY = null;
+  faixa.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); faixa.setPointerCapture(ev.pointerId); faixaY = ev.clientY; faixa.classList.add('ativo');
+  });
+  faixa.addEventListener('pointermove', function (ev) {
+    if (faixaY === null) return;
+    ev.preventDefault(); rolar(0, ev.clientY - faixaY); faixaY = ev.clientY;
+  });
+  function fimFaixa() { faixaY = null; faixa.classList.remove('ativo'); }
+  faixa.addEventListener('pointerup', fimFaixa);
+  faixa.addEventListener('pointercancel', fimFaixa);
+
+  // ---------- botões físicos de tela ----------
+  var apertados = {};
+  [0, 1, 2].forEach(function (i) {
+    var el = $('#b' + i);
+    el.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); el.setPointerCapture(ev.pointerId);
+      apertados[i] = true; el.classList.add('ativo'); botao(i, true); vibrar();
+    });
+    function solta(ev) {
+      if (!apertados[i]) return;
+      apertados[i] = false; el.classList.remove('ativo'); botao(i, false);
+    }
+    el.addEventListener('pointerup', solta);
+    el.addEventListener('pointercancel', solta);
+  });
+  function soltarTudo() {
+    dedos = {}; n = 0; maxDedos = 0; arrastando = false; px = py = 0;
+    pad.classList.remove('ativo');
+    [0, 1, 2].forEach(function (i) { apertados[i] = false; $('#b' + i).classList.remove('ativo'); });
+  }
+
+  // impede zoom/rolagem/menus do navegador
+  document.addEventListener('touchmove', function (e) { if (!$('#painel').classList.contains('aberto')) e.preventDefault(); }, { passive: false });
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  ['gesturestart', 'gesturechange'].forEach(function (nome) {
+    document.addEventListener(nome, function (e) { e.preventDefault(); });
+  });
+
+  // ---------- painel de ajustes ----------
+  var painel = $('#painel');
+  function preencher() {
+    $('#sens').value = cfg.sens; $('#sensV').textContent = (+cfg.sens).toFixed(1);
+    $('#acel').value = cfg.acel; $('#acelV').textContent = (+cfg.acel).toFixed(2);
+    $('#rol').value = cfg.rol;   $('#rolV').textContent = (+cfg.rol).toFixed(1);
+    $('#nat').checked = cfg.nat; $('#toque').checked = cfg.toque; $('#vib').checked = cfg.vib;
+  }
+  [['sens', 'sensV', 1], ['acel', 'acelV', 2], ['rol', 'rolV', 1]].forEach(function (r) {
+    $('#' + r[0]).addEventListener('input', function () {
+      cfg[r[0]] = parseFloat(this.value); $('#' + r[1]).textContent = cfg[r[0]].toFixed(r[2]); salvarCfg();
+    });
+  });
+  ['nat', 'toque', 'vib'].forEach(function (k) {
+    $('#' + k).addEventListener('change', function () { cfg[k] = this.checked; salvarCfg(); });
+  });
+  $('#engrenagem').addEventListener('click', function () { preencher(); painel.classList.add('aberto'); });
+  $('#fechar').addEventListener('click', function () { painel.classList.remove('aberto'); });
+  $('#padrao').addEventListener('click', function () { for (var k in PADRAO) cfg[k] = PADRAO[k]; salvarCfg(); preencher(); });
+  $('#tela').addEventListener('click', function () {
+    var el = document.documentElement;
+    try { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {}
+    painel.classList.remove('aberto');
+  });
+
+  conectar();
+})();
+</script>
+</body>
+</html>

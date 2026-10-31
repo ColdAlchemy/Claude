@@ -20,3 +20,6 @@ build/
 # Editor
 .vscode/
 .idea/
+
+# Celular Mouse: senha gerada no PC
+.token

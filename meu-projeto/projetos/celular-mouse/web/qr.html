@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Celular Mouse</title>
+<style>
+  :root { --bg: #0e1116; --card: #161b22; --borda: #262d38; --txt: #e6edf3; --suave: #8b97a6; --ok: #3fb950; --acento: #4f9dff; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--txt);
+    font: 16px/1.5 system-ui, "Segoe UI", Roboto, sans-serif;
+    display: grid; place-items: center; padding: 24px;
+  }
+  main { width: min(920px, 100%); display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center; }
+  @media (max-width: 720px) { main { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+  #qr { background: #fff; padding: 14px; border-radius: 18px; width: min(340px, 80vw); aspect-ratio: 1; }
+  #qr svg { display: block; width: 100%; height: 100%; }
+  h1 { margin: 0 0 6px; font-size: 28px; }
+  p { margin: 0 0 18px; color: var(--suave); }
+  ol { margin: 0 0 22px; padding-left: 22px; color: var(--txt); }
+  li { margin: 6px 0; }
+  code { display: inline-block; background: var(--card); border: 1px solid var(--borda); padding: 4px 10px; border-radius: 8px; word-break: break-all; font-size: 14px; }
+  #estado { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--borda); color: var(--suave); }
+  #estado i { width: 10px; height: 10px; border-radius: 50%; background: #d29922; }
+  #estado.ok { color: var(--txt); border-color: var(--ok); }
+  #estado.ok i { background: var(--ok); }
+  #redes { margin: 18px 0 0; display: flex; gap: 8px; flex-wrap: wrap; }
+  #redes button { font: inherit; font-size: 14px; color: var(--txt); background: var(--card); border: 1px solid var(--borda); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+  #redes button.sel { border-color: var(--acento); }
+  #erro { color: #f85149; }
+</style>
+</head>
+<body>
+<main>
+  <div id="qr" aria-label="QR code"></div>
+  <section>
+    <h1>Celular Mouse</h1>
+    <p>Seu celular vira o mouse deste computador.</p>
+    <ol>
+      <li>Conecte o celular no <b>mesmo Wi-Fi</b> deste PC.</li>
+      <li>Abra a <b>câmera</b> do celular e aponte para o QR code.</li>
+      <li>Toque no link. Pronto, é só arrastar o dedo.</li>
+    </ol>
+    <div id="estado"><i></i><span>Aguardando o celular…</span></div>
+    <div id="redes"></div>
+    <p style="margin-top:18px">Ou digite no celular: <code id="url"></code></p>
+    <p id="erro"></p>
+  </section>
+</main>
+<script src="/qrcode.js"></script>
+<script>
+(function () {
+  var info = null, sel = 0;
+  var qr = document.getElementById('qr'), urlEl = document.getElementById('url');
+  var estado = document.getElementById('estado'), redes = document.getElementById('redes');
+
+  function link(e) { return 'http://' + e.ip + ':' + info.porta + '/?t=' + info.token; }
+
+  function desenhar() {
+    if (!info.enderecos.length) {
+      document.getElementById('erro').textContent = 'Não achei sua rede. Conecte o PC ao Wi-Fi e abra de novo.';
+      return;
+    }
+    var u = link(info.enderecos[sel]);
+    var q = qrcode(0, 'M'); q.addData(u); q.make();
+    qr.innerHTML = q.createSvgTag({ scalable: true, margin: 0, cellSize: 8 });
+    urlEl.textContent = u;
+    redes.innerHTML = '';
+    if (info.enderecos.length > 1) {
+      info.enderecos.forEach(function (e, i) {
+        var b = document.createElement('button');
+        b.textContent = e.nome + ' · ' + e.ip;
+        if (i === sel) b.className = 'sel';
+        b.onclick = function () { sel = i; desenhar(); };
+        redes.appendChild(b);
+      });
+    }
+  }
+
+  function atualizar() {
+    fetch('/info', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      var mudou = !info || JSON.stringify(info.enderecos) !== JSON.stringify(d.enderecos);
+      info = d;
+      if (mudou) { if (sel >= d.enderecos.length) sel = 0; desenhar(); }
+      var ok = d.clientes > 0;
+      estado.className = ok ? 'ok' : '';
+      estado.querySelector('span').textContent = ok ? 'Celular conectado ✓' : 'Aguardando o celular…';
+    }).catch(function () {
+      estado.className = '';
+      estado.querySelector('span').textContent = 'Servidor desligado';
+    });
+  }
+  atualizar();
+  setInterval(atualizar, 1500);
+})();
+</script>
+</body>
+</html>
