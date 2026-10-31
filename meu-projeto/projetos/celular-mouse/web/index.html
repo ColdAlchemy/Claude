@@ -39,7 +39,12 @@
 
   #app.modo-base #toque, #app.modo-ar #toque { display: none; }
   #app.modo-toque #jogo { display: none; }
-  #app.modo-ar #diag { display: none; }
+  #app.modo-ar #diag, #app.modo-ar #mira { display: none; }
+  #mira { position: absolute; right: 12px; bottom: 84px; width: 84px; height: 84px; border: 1px solid var(--borda); border-radius: 50%; background: rgba(14,17,22,.7); pointer-events: none; z-index: 1; }
+  #mira::before, #mira::after { content: ""; position: absolute; background: var(--borda); }
+  #mira::before { left: 50%; top: 6px; bottom: 6px; width: 1px; }
+  #mira::after { top: 50%; left: 6px; right: 6px; height: 1px; }
+  #miraD { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%; background: var(--acento); }
   #diag {
     position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 1; display: flex; align-items: center; gap: 10px;
     background: rgba(14,17,22,.85); border: 1px solid var(--borda); border-radius: 12px; padding: 6px 10px; font-size: 12px; color: var(--suave); pointer-events: none;
@@ -178,6 +183,7 @@
 
   <div id="jogo">
     <div class="centro" id="centro"></div>
+    <div id="mira"><i id="miraD"></i></div>
     <div id="diag"><canvas id="prev" width="128" height="96"></canvas><div id="diagT">câmera desligada</div></div>
     <div id="guia"><div id="guiaT"></div><div class="barra"><i id="guiaB"></i></div><button id="guiaGo">Começar</button> <button id="guiaX">Cancelar</button></div>
     <div id="barraedit">
@@ -207,6 +213,10 @@
     <h3>Base (deslizar na mesa)</h3>
     <div class="linha"><label for="dpi">Sensibilidade (DPI)</label><input id="dpi" type="range" min="200" max="3200" step="50"><span class="v" id="dpiV" style="width:44px"></span></div>
     <div class="linha"><label for="lant">Lanterna</label><input id="lant" type="checkbox"></div>
+    <div class="linha"><label for="bInvX">Inverter ← →</label><input id="bInvX" type="checkbox"></div>
+    <div class="linha"><label for="bInvY">Inverter ↑ ↓</label><input id="bInvY" type="checkbox"></div>
+    <div class="linha"><label for="bTrocar">Trocar eixos</label><input id="bTrocar" type="checkbox"></div>
+    <div class="linha"><label for="bLev">Detectar levantar</label><input id="bLev" type="checkbox"></div>
     <div class="acoes">
       <button id="calMov">Calibrar movimento</button>
       <button id="trocaCam">Trocar câmera</button>
@@ -244,7 +254,7 @@
   var IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   // ---------- ajustes (guardados no celular) ----------
-  var PADRAO = { modo: 'base', dpi: 800, lant: true, mat: null, cam: '', sensH: 10, sensV: 10, invH: false, invV: false,
+  var PADRAO = { modo: 'base', dpi: 800, lant: true, mat: null, cam: '', invX: false, invY: false, trocar: false, lev: false, sensH: 10, sensV: 10, invH: false, invV: false,
                  sens: 2.2, acel: 0.6, rol: 1.5, nat: true, toque: true, vib: true };
   var cfg = {};
   function lerLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -443,7 +453,7 @@
   // =====================================================================
   var B = { ativo: false, permitido: false, stream: null, track: null, fluxo: null, W: 128, H: 96, ctx: null,
             vid: $('#cam'), cv: $('#prev'), calib: null, bema: 0, levantado: false, estavel: 0, tlev: 0,
-            fps: 0, nq: 0, tfps: 0, tdiag: 0, ult: null, abrindo: false };
+            fps: 0, nq: 0, tfps: 0, tdiag: 0, ult: null, abrindo: false, hist: [], sx: 1, sy: 1, mx: 0, my: 0, mira: $('#miraD') };
   var MAT0 = [-4, 0, 0, -4];     // sem calibrar: conteúdo anda para um lado, cursor para o outro
 
   function pedirQuadro() {
@@ -457,6 +467,8 @@
       B.ctx.drawImage(B.vid, 0, 0, B.W, B.H);
       var r = B.fluxo.processar(B.ctx.getImageData(0, 0, B.W, B.H).data);
       tratarFluxo(r);
+      B.mx *= 0.8; B.my *= 0.8;
+      B.mira.style.transform = 'translate(' + Math.max(-34, Math.min(34, B.mx * 0.5)) + 'px,' + Math.max(-34, Math.min(34, B.my * 0.5)) + 'px)';
       var t = performance.now();
       B.nq++;
       if (t - B.tdiag > 500) {
@@ -469,29 +481,42 @@
 
   function tratarFluxo(r) {
     B.ult = r;
+    B.hist.push(r.ok ? 1 : 0); if (B.hist.length > 60) B.hist.shift();
     var agora = performance.now(), br = r.brilho;
-    // "levantou do tapete": o brilho muda de repente (a lanterna deixa de iluminar a superfície)
-    if (!B.bema) B.bema = br;
-    var salto = Math.abs(br - B.bema) > 0.3 * B.bema + 4;
-    if (salto) {
-      if (!B.levantado) B.tlev = agora;
-      B.levantado = true; B.estavel = 0; B.fluxo.reiniciar();
-      if (agora - B.tlev > 2000) { B.levantado = false; B.bema = br; }      // luz nova virou o normal
-    } else if (B.levantado) { if (++B.estavel > 5) { B.levantado = false; B.bema = br; } B.fluxo.reiniciar(); }
-    else B.bema += 0.03 * (br - B.bema);
+    if (cfg.lev) {
+      // opcional: "levantou do tapete" = o brilho muda de repente (a lanterna deixa de iluminar a superfície)
+      if (!B.bema) B.bema = br;
+      var salto = Math.abs(br - B.bema) > 0.5 * B.bema + 8;
+      if (salto) {
+        if (!B.levantado) B.tlev = agora;
+        B.levantado = true; B.estavel = 0; B.fluxo.reiniciar();
+        if (agora - B.tlev > 2000) { B.levantado = false; B.bema = br; }
+      } else if (B.levantado) { if (++B.estavel > 5) { B.levantado = false; B.bema = br; } B.fluxo.reiniciar(); }
+      else B.bema += 0.1 * (br - B.bema);
+    } else B.levantado = false;
 
-    var ok = r.ok && !B.levantado && Math.hypot(r.dx, r.dy) < 0.18 * B.W;
-    if (B.calib) { calibTick(ok, ok ? r.dx : 0, ok ? r.dy : 0); return; }
-    if (!ok || S.pausado || !aberto || editando) return;
-    var dx = Math.abs(r.dx) < 0.03 ? 0 : r.dx, dy = Math.abs(r.dy) < 0.03 ? 0 : r.dy;   // ruído do sensor
+    var dxr = r.dx * B.sx, dyr = r.dy * B.sy;                 // corrige proporção do vídeo
+    var ok = r.ok && !B.levantado && Math.hypot(dxr, dyr) < 0.3 * B.W;
+    if (B.calib) { calibTick(ok, dxr, dyr); return; }
+    if (!ok) return;
+    if (Math.abs(dxr) < 0.03) dxr = 0;                         // ruído do sensor parado
+    if (Math.abs(dyr) < 0.03) dyr = 0;
     var m = cfg.mat || MAT0, k = cfg.dpi / 800;
-    mover((m[0] * dx + m[1] * dy) * k, (m[2] * dx + m[3] * dy) * k);
+    var cx = (m[0] * dxr + m[1] * dyr) * k, cy = (m[2] * dxr + m[3] * dyr) * k;
+    if (cfg.trocar) { var t = cx; cx = cy; cy = t; }
+    if (cfg.invX) cx = -cx;
+    if (cfg.invY) cy = -cy;
+    B.mx += cx; B.my += cy;                                    // mira de teste na tela
+    if (S.pausado || !aberto || editando) return;
+    mover(cx, cy);
   }
 
   function diag(r) {
-    var tx = r.contraste < 1.2 ? ['sem textura', 'ruim'] : r.contraste < 6 ? ['fraca', 'meh'] : ['boa', 'bom'];
+    var tx = r.contraste < 1.2 ? ['sem textura', 'ruim'] : r.contraste < 6 ? ['fraca', 'meh'] : r.aniso < 0.08 ? ['só numa direção', 'meh'] : ['boa', 'bom'];
     var est = B.levantado ? ['levantado', 'meh'] : r.ok ? ['rastreando', 'bom'] : ['perdido', 'ruim'];
-    $('#diagT').innerHTML = B.fps + ' fps<br>textura: <b class="' + tx[1] + '">' + tx[0] + '</b><br><b class="' + est[1] + '">' + est[0] + '</b>';
+    var soma = 0; for (var i = 0; i < B.hist.length; i++) soma += B.hist[i];
+    var pct = B.hist.length ? Math.round(100 * soma / B.hist.length) : 0;
+    $('#diagT').innerHTML = B.fps + ' fps · rastreio ' + pct + '%<br>textura: <b class="' + tx[1] + '">' + tx[0] + '</b><br><b class="' + est[1] + '">' + est[0] + '</b>';
   }
 
   function configurarCamera() {
@@ -519,9 +544,11 @@
         var maior = 128, menor = Math.max(48, Math.round(maior * Math.min(vw, vh) / Math.max(vw, vh) / 8) * 8);
         B.W = vw >= vh ? maior : menor; B.H = vw >= vh ? menor : maior;
         B.cv.width = B.W; B.cv.height = B.H; B.cv.classList.toggle('vert', B.H > B.W);
+        var ex = vw / B.W, ey = vh / B.H, en = Math.max(vw, vh) / Math.max(B.W, B.H);
+        B.sx = ex / en; B.sy = ey / en;                 // px da imagem reduzida -> mesma unidade nos dois eixos
         B.ctx = B.cv.getContext('2d', { willReadFrequently: true });
         B.fluxo = new Fluxo(B.W, B.H);
-        B.bema = 0; B.levantado = false; B.fps = 0; B.nq = 0; B.tfps = 0;
+        B.bema = 0; B.levantado = false; B.fps = 0; B.nq = 0; B.tfps = 0; B.hist = [];
         B.ativo = true;
         configurarCamera();
         pedirQuadro();
@@ -578,38 +605,44 @@
   function guiaTexto() {
     var c = B.calib; if (!c) return;
     guia.classList.add('aberto');
-    guiaGo.style.display = c.estado === 'espera' ? '' : 'none';
+    guiaGo.style.display = '';
+    guiaGo.textContent = c.estado === 'espera' ? 'Começar' : 'Pronto';
     guiaB.style.width = '0';
     if (c.estado === 'espera')
-      guiaT.textContent = 'Calibrar (' + (c.passo + 1) + '/2). Apoie o celular na mesa, como um mouse. ' + PASSOS[c.passo] + ' Toque em Começar antes.';
-    else guiaT.textContent = 'Deslize agora… (' + (c.passo + 1) + '/2)';
+      guiaT.textContent = 'Calibrar (' + (c.passo + 1) + '/2). Apoie o celular na mesa, reto, como um mouse. ' + PASSOS[c.passo] + ' Toque em Começar antes.';
+    else guiaT.textContent = 'Deslize agora, em linha reta… (' + (c.passo + 1) + '/2). Ao parar, termina sozinho; ou toque em Pronto.';
+  }
+  function calibFimPasso() {
+    var c = B.calib, mag = Math.hypot(c.soma[0], c.soma[1]);
+    if (mag < 20) { aviso('Quase não detectei movimento. Veja a janelinha da câmera (textura/rastreio).', 3500); return; }
+    if (c.passo === 0) { c.cf = c.soma.slice(); c.passo = 1; c.estado = 'espera'; guiaTexto(); }
+    else calibConcluir(c.cf, c.soma.slice());
   }
   guiaGo.addEventListener('click', function () {
     var c = B.calib; if (!c) return;
-    c.estado = 'medindo'; c.soma = [0, 0]; c.ult = performance.now(); c.moveu = false;
-    B.fluxo.reiniciar(); guiaTexto();
+    if (c.estado === 'espera') {
+      c.estado = 'medindo'; c.soma = [0, 0]; c.ult = performance.now();
+      B.fluxo.reiniciar(); guiaTexto();
+    } else calibFimPasso();
   });
   $('#guiaX').addEventListener('click', function () { B.calib = null; fecharGuia(); });
   function calibTick(ok, dx, dy) {
     var c = B.calib, agora = performance.now();
     if (c.estado !== 'medindo') return;
-    c.soma[0] += dx; c.soma[1] += dy;
+    // "parado" só conta com rastreio válido: perder o rastreio no meio do deslize não encerra o passo
+    if (!ok || Math.hypot(dx, dy) > 0.2) c.ult = agora;
+    if (ok) { c.soma[0] += dx; c.soma[1] += dy; }
     var mag = Math.hypot(c.soma[0], c.soma[1]);
-    if (Math.hypot(dx, dy) > 0.2) c.ult = agora;
     guiaB.style.width = Math.min(100, mag / 3) + '%';
-    if (mag > 30 && agora - c.ult > 900) {                  // andou e parou: terminou este passo
-      if (c.passo === 0) { c.cf = c.soma.slice(); c.passo = 1; c.estado = 'espera'; guiaTexto(); }
-      else calibConcluir(c.cf, c.soma.slice());
-    }
+    if (mag > 60 && agora - c.ult > 900) calibFimPasso();
   }
   function calibConcluir(cf, cr) {
-    var det = cr[0] * cf[1] - cr[1] * cf[0], nr = Math.hypot(cr[0], cr[1]), nf = Math.hypot(cf[0], cf[1]);
     B.calib = null; fecharGuia();
-    if (nr < 30 || nf < 30) { aviso('Quase não detectei movimento. Veja a textura na janelinha da câmera.', 4500); return; }
-    if (Math.abs(det) / (nr * nf) < 0.5) { aviso('Os dois deslizes ficaram na mesma direção. Refaça em ⚙ › Calibrar movimento.', 4500); return; }
-    var R = 10 * 800 / 2.54, f = R / det;
-    cfg.mat = [f * cf[1], -f * cf[0], f * cr[1], -f * cr[0]]; salvarCfg();
-    aviso('Calibrado! Ajuste a sensibilidade em ⚙ se quiser.', 3500);
+    var c = Fluxo.calibrar(cf, cr, 10, 800);
+    if (!c || c.nf < 20 || c.nr < 20) { aviso('Quase não detectei movimento. Veja a janelinha da câmera.', 4500); return; }
+    if (c.score - c.segundo < 0.3) { aviso('Não deu para saber a direção. Refaça deslizando mais reto (⚙ › Calibrar movimento).', 5000); return; }
+    cfg.mat = c.mat; cfg.invX = cfg.invY = cfg.trocar = false; salvarCfg(); preencher();
+    aviso('Calibrado! Confira na mira: deslize para a direita e a bolinha deve ir para a direita.', 5000);
   }
   window.__calibConcluir = calibConcluir;
 
@@ -875,7 +908,7 @@
   // ---------- painel de ajustes ----------
   var painel = $('#painel');
   var SL = [['dpi', 'dpiV', 0], ['sensH', 'sensHV', 1], ['sensV', 'sensVV', 1], ['sens', 'sensV2', 1], ['acel', 'acelV', 2], ['rol', 'rolV', 1]];
-  var CK = [['lant', 'lant'], ['invH', 'invH'], ['invV', 'invV'], ['nat', 'nat'], ['toque', 'toque2'], ['vib', 'vib']];
+  var CK = [['lant', 'lant'], ['invX', 'bInvX'], ['invY', 'bInvY'], ['trocar', 'bTrocar'], ['lev', 'bLev'], ['invH', 'invH'], ['invV', 'invV'], ['nat', 'nat'], ['toque', 'toque2'], ['vib', 'vib']];
   function preencher() {
     SL.forEach(function (r) { $('#' + r[0]).value = cfg[r[0]]; $('#' + r[1]).textContent = (+cfg[r[0]]).toFixed(r[2]); });
     CK.forEach(function (r) { $('#' + r[1]).checked = cfg[r[0]]; });
