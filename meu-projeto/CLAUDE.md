@@ -8,6 +8,9 @@ Instruções para o Claude ao trabalhar em `meu-projeto/`.
 - Você não tem acesso direto ao PC do usuário. Comandos que precisam rodar
   lá devem ser entregues prontos, um bloco de código por comando.
 
+Leia também `docs/contexto.md`: decisões já tomadas, o que não funciona e
+as pendências atuais.
+
 ## Idioma e tom
 - Responda em português do Brasil, de forma direta e objetiva.
 - Explique passos de forma específica (onde clicar, o que digitar) quando
