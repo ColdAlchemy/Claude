@@ -31,18 +31,26 @@ a câmera de um celular de verdade** (é o ponto de maior incerteza, ver "Limite
 ## Modo Base: como usar
 1. Toque em **Iniciar** e permita a **câmera**. A lanterna acende (ela
    funciona como o LED de um mouse óptico).
-2. Na primeira vez abre a **calibração**: apoie o celular na folha, como um
-   mouse, e (1) deslize **10 cm para a frente** e pare, (2) volte e deslize
-   **10 cm para a direita** e pare. Isso descobre sozinho a direção e a escala
-   (qualquer posição da câmera serve) e deixa em 800 DPI.
-3. Use. A janelinha embaixo mostra a câmera, os quadros por segundo, a textura
-   (`boa`/`fraca`/`sem textura`) e `rastreando`/`levantado`/`perdido`.
-4. **Levantar o celular** da folha congela o cursor sozinho (detecta a mudança
-   de luz) e volta ao rastrear ao apoiar de novo, como levantar um mouse.
-   O botão **PAUSA** (segurar) também congela.
-5. ⚙: **Sensibilidade (DPI)**, **Lanterna**, **Calibrar movimento**,
-   **Trocar câmera** e **Mudar botões de lugar** (arraste os botões para onde
-   seus dedos ficam; layout salvo por orientação).
+2. Na primeira vez abre a **calibração**: apoie o celular na folha, **reto,
+   como um mouse**, e (1) toque em Começar e deslize **10 cm para a frente**,
+   pare; (2) volte, toque em Começar e deslize **10 cm para a direita**, pare.
+   Ela descobre a direção da câmera (são só 8 possibilidades: eixos trocados
+   ou espelhados) e a escala, e deixa em 800 DPI. Deslizes tortos não entortam
+   o resultado.
+3. **Confira na "mira"** (círculo no canto da tela): deslize para a direita e
+   a bolinha deve ir para a direita; para a frente, para cima. Se estiver ao
+   contrário, é só marcar em ⚙: **Inverter ← →**, **Inverter ↑ ↓** ou
+   **Trocar eixos**, sem precisar recalibrar.
+4. A janelinha embaixo mostra a câmera, os quadros por segundo, o **% de
+   rastreio**, a textura (`boa` / `fraca` / `só numa direção` / `sem textura`)
+   e `rastreando` / `perdido`. "Só numa direção" é veio de madeira ou
+   listras: o movimento ao longo delas não é medido; use a folha impressa.
+5. **PAUSA** (segurar) congela o cursor para reposicionar o celular.
+   ⚙ › **Detectar levantar** (experimental, desligado) congela sozinho quando
+   o brilho muda de repente; pode disparar à toa ao passar por manchas
+   claras e escuras da folha.
+6. ⚙: **Sensibilidade (DPI)**, **Lanterna**, **Calibrar movimento**,
+   **Trocar câmera** e **Mudar botões de lugar**.
 
 | Botão | O que faz |
 |---|---|
@@ -53,7 +61,8 @@ a câmera de um celular de verdade** (é o ponto de maior incerteza, ver "Limite
 ### Limites do modo Base (leia)
 - **Velocidade máxima.** A câmera do navegador entrega 30–60 quadros por
   segundo e enxerga só alguns milímetros da superfície. O rastreador aguenta
-  cerca de 12% do campo de visão por quadro, o que dá algo como **10–20 cm/s**.
+  cerca de 12% do campo de visão por quadro (até uns 25% em movimento contínuo,
+  porque ele prevê o quadro seguinte), o que dá algo como **10–30 cm/s**.
   Serve para apontar, arrastar e mirar devagar; **flicks rápidos de jogo
   vão "perder" o movimento** (o cursor para em vez de pular para um lugar errado).
 - **Foco.** A câmera fica a poucos milímetros da superfície, mais perto do que
@@ -145,6 +154,15 @@ mede giro, então não é preciso como o modo Base.
   bloqueio/UAC, a menos que o `iniciar.bat` rode como administrador.
 
 ## Decisões e anotações
+- 2026-10-31 (ajuste após o 1º teste real do modo Base: direção invertida e
+  linhas tortas/falhadas): a calibração agora escolhe entre as 8 orientações
+  possíveis (antes ajustava uma matriz livre, que absorvia qualquer curva dos
+  deslizes); o fim de cada passo só conta com rastreio válido (antes perder o
+  rastreio encerrava o passo cedo); o rastreador prevê o movimento a partir do
+  quadro anterior (aceleração 0→30 px/quadro: de 17 falhas em 30 para 0) e
+  rejeita medidas ruins/saltos (antes aceitava alguns resultados errados em
+  alta velocidade); correção da proporção do vídeo; "levantar" passou a ser
+  opcional (desligado) por risco de falso disparo.
 - 2026-10-31: o usuário não quer mover o celular no ar, e sim deslizá-lo numa
   base como um mouse. Giroscópio/acelerômetro não dão posição (a integração
   dupla acumula erro), então o modo Base usa a câmera traseira como sensor
