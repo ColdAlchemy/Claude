@@ -58,6 +58,25 @@ Ou use o script de apoio, a partir da pasta `meu-projeto`:
 .\scripts\atualizar.ps1
 ```
 
+## Sincronização automática (recomendado)
+
+Para não precisar digitar `git pull` a cada vez, deixe este script rodando
+uma vez em um terminal do Antigravity (**Terminal -> New Terminal**):
+
+```powershell
+.\scripts\sincronizar.ps1
+```
+
+Ele verifica a cada 15 segundos e traz o que o Claude enviou. As pastas e
+arquivos novos aparecem sozinhos no Antigravity. Deixe esse terminal aberto
+em segundo plano. Para parar, use Ctrl+C.
+
+Se o PowerShell bloquear a execução do script, libere só para você, uma vez:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
 ## Enviar alterações suas para a nuvem
 
 Se você editar algo no Antigravity e quiser que o Claude veja:
