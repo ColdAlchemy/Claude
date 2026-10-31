@@ -509,43 +509,34 @@ namespace CelularMouse
             return sb.ToString();
         }
 
-        // Windows: certificado criado pelo servidor.ps1 na loja do usuario.
-        // Fallback (e testes fora do Windows): arquivo cert.pfx na pasta.
+        // Certificado HTTPS: arquivo cert.pfx na pasta (criado pelo certificado.cs).
+        // Nao usamos a loja de certificados do Windows de proposito: ela pode
+        // pedir cartao inteligente / PIN em alguns PCs.
+        public const string SenhaPfx = "celular-mouse";
+
         static X509Certificate2 CarregarCertificado(string dir)
         {
             try
             {
-                X509Store st = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                st.Open(OpenFlags.ReadOnly);
-                X509Certificate2 melhor = null;
-                foreach (X509Certificate2 c in st.Certificates)
-                {
-                    if (c.Subject == "CN=Celular Mouse" && c.HasPrivateKey && c.NotAfter > DateTime.Now.AddDays(1))
-                    {
-                        if (melhor == null || c.NotAfter > melhor.NotAfter) melhor = c;
-                    }
-                }
-                st.Close();
-                if (melhor != null) return melhor;
-            }
-            catch (Exception) { }
-            try
-            {
                 string pfx = Path.Combine(dir, "cert.pfx");
-                if (File.Exists(pfx)) return new X509Certificate2(pfx, "celular-mouse");
+                if (File.Exists(pfx))
+                {
+                    X509Certificate2 c = new X509Certificate2(pfx, SenhaPfx);
+                    if (c.NotAfter > DateTime.Now.AddDays(1)) return c;
+                }
             }
             catch (Exception) { }
             return null;
         }
 
-        public static void Executar(string dir, int porta, bool abrirNavegador)
+        public static void Executar(string dir, int porta, bool abrirNavegador, bool usarHttps)
         {
             bool windows = Environment.OSVersion.Platform == PlatformID.Win32NT;
             IMouse mouse;
             if (windows) mouse = new WindowsMouse(); else mouse = new LogMouse();
 
             string token = LerOuCriarToken(dir);
-            X509Certificate2 cert = CarregarCertificado(dir);
+            X509Certificate2 cert = usarHttps ? CarregarCertificado(dir) : null;
             Servidor srv = new Servidor(Path.Combine(dir, "web"), token, mouse, porta, cert);
 
             // O servidor precisa abrir a porta antes de mostrarmos os enderecos.
@@ -573,7 +564,7 @@ namespace CelularMouse
                 Console.WriteLine("    So toque:           http://" + e.Ip + ":" + srv.Porta + "/?t=" + token + "   (" + e.Nome + ")");
             }
             if (srv.PortaTls == 0)
-                Console.WriteLine("\n  AVISO: sem certificado HTTPS, o modo sensor nao vai funcionar.");
+                Console.WriteLine("\n  Sem HTTPS: so o modo toque funciona (o sensor precisa de HTTPS).");
             Console.WriteLine();
             Console.WriteLine("  Para encerrar: feche esta janela ou aperte Ctrl+C.");
             Console.WriteLine();
@@ -591,7 +582,7 @@ namespace CelularMouse
         {
             string dir = args.Length > 0 ? args[0] : AppDomain.CurrentDomain.BaseDirectory;
             int porta = args.Length > 1 ? int.Parse(args[1]) : 8765;
-            Executar(dir, porta, false);
+            Executar(dir, porta, false, true);
         }
     }
 }

@@ -16,8 +16,8 @@ seu celular + HTTPS no Windows).
 
 ## Como rodar
 1. No PC, dê **duplo clique em `iniciar.bat`** (pasta `projetos\celular-mouse`).
-   Na primeira vez ele cria um certificado local (alguns segundos) e o Windows
-   pergunta sobre o Firewall: marque **Redes particulares** e **Permitir acesso**.
+   Na primeira vez ele cria o arquivo `cert.pfx` (alguns segundos; não usa a
+   loja de certificados do Windows) e o Windows pergunta sobre o Firewall: marque **Redes particulares** e **Permitir acesso**.
 2. Abre uma janela com um **QR code**. Deixe a aba **"Com sensor (jogos)"**.
 3. No celular (mesmo Wi-Fi), aponte a câmera para o QR code e toque no link.
 4. O navegador avisa **"conexão não é particular"**. É normal (o certificado é
@@ -67,6 +67,16 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
   "isolamento de clientes" bloqueia; alternativa: ligar o hotspot do celular e
   conectar o PC nele. Rede do Windows como "Pública" bloqueia: mude para
   "Particular" ou rode `liberar-firewall.bat` (pede administrador).
+- **Pede cartão inteligente / PIN ao abrir (versão antiga):** vinha do
+  certificado guardado na loja do Windows. Agora o certificado é só o arquivo
+  `cert.pfx` desta pasta. Se ainda aparecer algo, rode `iniciar.bat -SemHttps`
+  (liga só o modo toque, sem certificado) e me diga em que momento aparece.
+  A versão antiga pode ter deixado o certificado "Celular Mouse" no Windows:
+  é inofensivo, e dá para remover em `certmgr.msc` › Pessoal › Certificados.
+- **Sensor sem HTTPS (só Chrome no Android):** abra `chrome://flags`, procure
+  **"Insecure origins treated as secure"**, ative, escreva
+  `http://IP-DO-PC:8765` (o endereço do QR "só toque"), toque em Relançar e
+  abra o link http. Não existe equivalente no iPhone.
 - **Mostra "Falta o HTTPS":** abriu o link http. Use o QR da aba "Com sensor".
   Se o PC não conseguiu criar o certificado, o `iniciar.bat` mostra um aviso
   amarelo; me mande o texto.
@@ -94,7 +104,8 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
 | Arquivo | Para que serve |
 |---|---|
 | `iniciar.bat` | Duplo clique para ligar |
-| `servidor.ps1` | Cria o certificado local, compila e inicia o servidor |
+| `servidor.ps1` | Cria o `cert.pfx` (1ª vez), compila e inicia o servidor |
+| `certificado.cs` | Gera o certificado HTTPS (exige .NET Framework 4.7.2+, Windows 10/11 atual) |
 | `servidor.cs` | Servidor: HTTP + HTTPS + WebSocket + `SendInput` |
 | `web/index.html` | Tela do celular (sensor, toque, botões, ajustes) |
 | `web/qr.html`, `web/qrcode.js` | Página do QR no PC (`qrcode-generator`, MIT) |
@@ -103,8 +114,8 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
 ## Segurança
 - Só quem tem o link com a senha (`?t=...`, gerada no PC, guardada em
   `.token`, fora do Git) controla o mouse. O QR só abre no próprio PC.
-- O HTTPS usa certificado do próprio PC (CN=Celular Mouse, na loja do seu
-  usuário do Windows). Protege a conversa na rede, mas o navegador do celular
+- O HTTPS usa um certificado só seu (`cert.pfx` nesta pasta, fora do Git; CN=Celular Mouse).
+  Protege a conversa na rede, mas o navegador do celular
   não "confia" nele, por isso o aviso. Use em redes de confiança.
 - Limite do Windows: não controla janelas "como administrador" nem a tela de
   bloqueio/UAC, a menos que o `iniciar.bat` rode como administrador.
@@ -117,6 +128,9 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
   orientação da tela. Exige HTTPS (regra dos navegadores); por isso o
   certificado local e a porta 8766.
 - Movimento por `SendInput` relativo (também chega como entrada bruta nos jogos).
+- 2026-10-31: o certificado saiu da loja do Windows (`New-SelfSignedCertificate`)
+  porque o usuário recebeu pedido de cartão inteligente; agora é gerado em
+  código (`CertificateRequest`) e guardado em `cert.pfx`.
 - Testado na nuvem (Mono + Chromium com sensores simulados): direção do
   cursor em pé/de lado/deitado, calibração, pausa, botões, edição de layout,
   HTTPS/wss. **Não testado:** `SendInput`/certificado no Windows e o
