@@ -1,0 +1,22 @@
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Segredos
+.env
+.env.*
+*.pem
+*.key
+
+# Dependências e builds
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+
+# Editor
+.vscode/
+.idea/
