@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Folha de textura</title>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  body { margin: 0; background: #0e1116; color: #e6edf3; font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
+  .ajuda { max-width: 760px; margin: 0 auto; padding: 24px; }
+  .ajuda h1 { margin: 0 0 8px; font-size: 24px; }
+  .ajuda p, .ajuda li { color: #aab4c0; }
+  button { font: inherit; padding: 12px 20px; border-radius: 12px; border: 0; background: #4f9dff; color: #04101f; font-weight: 600; cursor: pointer; margin-right: 8px; }
+  button.sec { background: #161b22; color: #e6edf3; border: 1px solid #262d38; }
+  #folha { display: block; width: 100%; max-width: 1100px; margin: 0 auto 24px; background: #fff; }
+  @media print { .ajuda { display: none; } body { background: #fff; } #folha { width: 297mm; height: 210mm; max-width: none; margin: 0; } }
+</style>
+</head>
+<body>
+<div class="ajuda">
+  <h1>Folha de textura para o Celular Mouse</h1>
+  <p>O modo Base enxerga o movimento pela textura da superfície. Uma mesa lisa ou um mousepad liso não têm textura nenhuma.
+  Esta folha tem manchas aleatórias, do tamanho certo para a câmera do celular.</p>
+  <ol>
+    <li>Clique em <b>Imprimir</b> (papel A4, em <b>modo paisagem</b>, <b>escala 100%</b>, sem margens; preto e branco serve).</li>
+    <li>Cole a folha na mesa com fita (ou coloque embaixo de uma folha de plástico transparente) e deslize o celular em cima dela.</li>
+    <li>Se a câmera não reconhecer, use <b>Mais fina</b> ou <b>Mais grossa</b> e imprima outra.</li>
+  </ol>
+  <p>
+    <button id="imp">Imprimir</button>
+    <button class="sec" data-e="0.6">Mais fina</button>
+    <button class="sec" data-e="1">Padrão</button>
+    <button class="sec" data-e="1.7">Mais grossa</button>
+  </p>
+</div>
+<canvas id="folha"></canvas>
+<script>
+(function () {
+  var c = document.getElementById('folha'), x = c.getContext('2d');
+  var PXMM = 8, W = 297 * PXMM, H = 210 * PXMM;   // 8 px por mm
+  c.width = W; c.height = H;
+  function prng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function desenhar(escala) {
+    var rnd = prng(20261031), img = x.createImageData(W, H), d = img.data;
+    var oitavas = [[2.5, 1.0], [5, 1.6], [10, 1.6], [20, 0.9]];       // [tamanho da mancha em mm, peso]
+    var campo = new Float32Array(W * H), tot = 0;
+    oitavas.forEach(function (o) {
+      var cel = Math.max(2, Math.round(o[0] * escala * PXMM)), gw = Math.ceil(W / cel) + 2, gh = Math.ceil(H / cel) + 2, g = new Float32Array(gw * gh);
+      for (var i = 0; i < g.length; i++) g[i] = rnd();
+      for (var y = 0; y < H; y++) {
+        var gy = y / cel, y0 = Math.floor(gy), fy = gy - y0; fy = fy * fy * (3 - 2 * fy);
+        for (var xx = 0; xx < W; xx++) {
+          var gx = xx / cel, x0 = Math.floor(gx), fx = gx - x0; fx = fx * fx * (3 - 2 * fx);
+          var a = g[y0 * gw + x0], b = g[y0 * gw + x0 + 1], c2 = g[(y0 + 1) * gw + x0], e = g[(y0 + 1) * gw + x0 + 1];
+          campo[y * W + xx] += o[1] * ((a * (1 - fx) + b * fx) * (1 - fy) + (c2 * (1 - fx) + e * fx) * fy);
+        }
+      }
+      tot += o[1];
+    });
+    var mn = 1e9, mx = -1e9, i;
+    for (i = 0; i < campo.length; i++) { if (campo[i] < mn) mn = campo[i]; if (campo[i] > mx) mx = campo[i]; }
+    for (i = 0; i < campo.length; i++) {
+      var v = (campo[i] - mn) / (mx - mn);
+      v = Math.max(0, Math.min(1, (v - 0.5) * 2.2 + 0.5)) * 255;     // mais contraste
+      d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+  }
+  desenhar(1);
+  document.getElementById('imp').onclick = function () { window.print(); };
+  Array.prototype.forEach.call(document.querySelectorAll('button[data-e]'), function (b) { b.onclick = function () { desenhar(parseFloat(b.dataset.e)); }; });
+})();
+</script>
+</body>
+</html>

@@ -373,6 +373,8 @@ namespace CelularMouse
                 if (caminho == "/") Arquivo(s, "index.html", "text/html; charset=utf-8");
                 else if (caminho == "/tls") Responder(s, 200, "OK", "application/json; charset=utf-8", Encoding.UTF8.GetBytes("{\"portaTls\":" + portaTls + "}"));
                 else if (caminho == "/qrcode.js") Arquivo(s, "qrcode.js", "application/javascript; charset=utf-8");
+                else if (caminho == "/fluxo.js") Arquivo(s, "fluxo.js", "application/javascript; charset=utf-8");
+                else if (caminho == "/padrao") Arquivo(s, "padrao.html", "text/html; charset=utf-8");
                 else if (caminho == "/qr" || caminho == "/info")
                 {
                     // Contem o token: so o proprio PC pode ver.

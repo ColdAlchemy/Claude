@@ -34,11 +34,28 @@
     background: var(--pad); color: var(--txt); font-size: 20px; display: grid; place-items: center; flex: none;
   }
   .modos { display: flex; border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; background: var(--pad); flex: none; }
-  .modos button { border: 0; background: none; color: var(--suave); font: inherit; font-size: 14px; padding: 0 14px; height: 42px; }
+  .modos button { border: 0; background: none; color: var(--suave); font: inherit; font-size: 14px; padding: 0 11px; height: 42px; }
   .modos button.sel { background: #1f3b63; color: var(--txt); }
 
-  #app.modo-sensor #toque { display: none; }
+  #app.modo-base #toque, #app.modo-ar #toque { display: none; }
   #app.modo-toque #jogo { display: none; }
+  #app.modo-ar #diag { display: none; }
+  #diag {
+    position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 1; display: flex; align-items: center; gap: 10px;
+    background: rgba(14,17,22,.85); border: 1px solid var(--borda); border-radius: 12px; padding: 6px 10px; font-size: 12px; color: var(--suave); pointer-events: none;
+  }
+  #prev { width: 72px; height: 54px; border-radius: 6px; background: #000; display: block; }
+  #prev.vert { width: 54px; height: 72px; }
+  #diag b { color: var(--txt); font-weight: 600; }
+  #diag .bom { color: var(--ok); } #diag .ruim { color: var(--ruim); } #diag .meh { color: var(--aviso); }
+  #guia {
+    position: absolute; left: 10px; right: 10px; bottom: 74px; z-index: 4; display: none; background: var(--pad); border: 1px solid var(--acento);
+    border-radius: 16px; padding: 12px 14px; font-size: 14px; line-height: 1.45;
+  }
+  #guia.aberto { display: block; }
+  #guia button { margin-top: 8px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--borda); background: var(--bg); color: var(--txt); font: inherit; font-size: 14px; }
+  #guia .barra { height: 6px; border-radius: 3px; background: var(--borda); margin-top: 8px; overflow: hidden; }
+  #guia .barra i { display: block; height: 100%; width: 0; background: var(--acento); }
 
   /* ---------- modo toque ---------- */
   #toque { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
@@ -129,11 +146,12 @@
 </style>
 </head>
 <body>
-<div id="app" class="modo-sensor">
+<div id="app" class="modo-base">
   <header>
     <div id="estado"><span id="ponto" class="espera"></span><span id="texto">Conectando…</span></div>
     <div class="modos">
-      <button data-modo="sensor" class="sel">Sensor</button>
+      <button data-modo="base" class="sel">Base</button>
+      <button data-modo="ar">Ar</button>
       <button data-modo="toque">Toque</button>
     </div>
     <button class="icone" id="engrenagem" aria-label="Ajustes">⚙</button>
@@ -159,7 +177,9 @@
   </div>
 
   <div id="jogo">
-    <div class="centro">Gire o celular para mover o mouse</div>
+    <div class="centro" id="centro"></div>
+    <div id="diag"><canvas id="prev" width="128" height="96"></canvas><div id="diagT">câmera desligada</div></div>
+    <div id="guia"><div id="guiaT"></div><div class="barra"><i id="guiaB"></i></div><button id="guiaGo">Começar</button> <button id="guiaX">Cancelar</button></div>
     <div id="barraedit">
       <div class="t" id="textoedit">Arraste os botões para onde seus dedos ficam melhor. Toque em um para mudar o tamanho.</div>
       <input id="tamsel" type="range" min="0.5" max="2" step="0.05" value="1" aria-label="Tamanho do botão">
@@ -177,19 +197,28 @@
     </div>
   </div>
 </div>
+<video id="cam" playsinline muted style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none"></video>
+<script src="/fluxo.js"></script>
 <div id="aviso"></div>
 
 <div id="painel">
   <div id="cartao">
     <h2>Ajustes</h2>
-    <h3>Sensor (girar o celular)</h3>
+    <h3>Base (deslizar na mesa)</h3>
+    <div class="linha"><label for="dpi">Sensibilidade (DPI)</label><input id="dpi" type="range" min="200" max="3200" step="50"><span class="v" id="dpiV" style="width:44px"></span></div>
+    <div class="linha"><label for="lant">Lanterna</label><input id="lant" type="checkbox"></div>
+    <div class="acoes">
+      <button id="calMov">Calibrar movimento</button>
+      <button id="trocaCam">Trocar câmera</button>
+      <button id="editarB">Mudar botões de lugar</button>
+    </div>
+    <h3>Ar (girar o celular)</h3>
     <div class="linha"><label for="sensH">Sens. horizontal</label><input id="sensH" type="range" min="2" max="40" step="0.5"><span class="v" id="sensHV"></span></div>
     <div class="linha"><label for="sensV">Sens. vertical</label><input id="sensV" type="range" min="2" max="40" step="0.5"><span class="v" id="sensVV"></span></div>
     <div class="linha"><label for="invH">Inverter horizontal</label><input id="invH" type="checkbox"></div>
     <div class="linha"><label for="invV">Inverter vertical</label><input id="invV" type="checkbox"></div>
     <div class="acoes">
-      <button id="calib">Calibrar agora</button>
-      <button id="editar">Mudar botões de lugar</button>
+      <button id="calib">Calibrar giroscópio</button>
     </div>
     <h3>Toque na tela</h3>
     <div class="linha"><label for="sens">Velocidade</label><input id="sens" type="range" min="0.5" max="6" step="0.1"><span class="v" id="sensV2"></span></div>
@@ -199,6 +228,7 @@
     <div class="linha"><label for="toque2">Tocar para clicar</label><input id="toque2" type="checkbox"></div>
     <h3>Geral</h3>
     <div class="linha"><label for="vib">Vibrar ao clicar</label><input id="vib" type="checkbox"></div>
+    <div class="acoes"><button id="editar">Mudar botões de lugar</button></div>
     <div class="acoes">
       <button id="tela">Tela cheia</button>
       <button id="padrao">Restaurar tudo</button>
@@ -214,7 +244,7 @@
   var IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   // ---------- ajustes (guardados no celular) ----------
-  var PADRAO = { modo: 'sensor', sensH: 10, sensV: 10, invH: false, invV: false,
+  var PADRAO = { modo: 'base', dpi: 800, lant: true, mat: null, cam: '', sensH: 10, sensV: 10, invH: false, invV: false,
                  sens: 2.2, acel: 0.6, rol: 1.5, nat: true, toque: true, vib: true };
   var cfg = {};
   function lerLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -223,6 +253,7 @@
     var salvo = {};
     try { salvo = JSON.parse(lerLS('cfg2') || '{}'); } catch (e) {}
     for (var k in PADRAO) cfg[k] = (k in salvo) ? salvo[k] : PADRAO[k];
+    if (cfg.modo === 'sensor') cfg.modo = 'base';   // nome antigo
   })();
   function salvarCfg() { gravarLS('cfg2', JSON.stringify(cfg)); }
 
@@ -406,6 +437,182 @@
     S.calib = null; fecharAviso();
   }
 
+  // =====================================================================
+  //  MODO BASE: deslizar o celular na mesa (a câmera de trás faz o papel do
+  //  sensor óptico de um mouse: mede para onde a textura da superfície andou)
+  // =====================================================================
+  var B = { ativo: false, permitido: false, stream: null, track: null, fluxo: null, W: 128, H: 96, ctx: null,
+            vid: $('#cam'), cv: $('#prev'), calib: null, bema: 0, levantado: false, estavel: 0, tlev: 0,
+            fps: 0, nq: 0, tfps: 0, tdiag: 0, ult: null, abrindo: false };
+  var MAT0 = [-4, 0, 0, -4];     // sem calibrar: conteúdo anda para um lado, cursor para o outro
+
+  function pedirQuadro() {
+    if (!B.ativo) return;
+    if (B.vid.requestVideoFrameCallback) B.vid.requestVideoFrameCallback(onQuadro);
+    else requestAnimationFrame(onQuadro);
+  }
+  function onQuadro() {
+    if (!B.ativo) return;
+    try {
+      B.ctx.drawImage(B.vid, 0, 0, B.W, B.H);
+      var r = B.fluxo.processar(B.ctx.getImageData(0, 0, B.W, B.H).data);
+      tratarFluxo(r);
+      var t = performance.now();
+      B.nq++;
+      if (t - B.tdiag > 500) {
+        if (B.tfps) B.fps = Math.round(B.nq * 1000 / (t - B.tfps));
+        B.nq = 0; B.tfps = t; B.tdiag = t; diag(r);
+      }
+    } catch (e) {}
+    pedirQuadro();
+  }
+
+  function tratarFluxo(r) {
+    B.ult = r;
+    var agora = performance.now(), br = r.brilho;
+    // "levantou do tapete": o brilho muda de repente (a lanterna deixa de iluminar a superfície)
+    if (!B.bema) B.bema = br;
+    var salto = Math.abs(br - B.bema) > 0.3 * B.bema + 4;
+    if (salto) {
+      if (!B.levantado) B.tlev = agora;
+      B.levantado = true; B.estavel = 0; B.fluxo.reiniciar();
+      if (agora - B.tlev > 2000) { B.levantado = false; B.bema = br; }      // luz nova virou o normal
+    } else if (B.levantado) { if (++B.estavel > 5) { B.levantado = false; B.bema = br; } B.fluxo.reiniciar(); }
+    else B.bema += 0.03 * (br - B.bema);
+
+    var ok = r.ok && !B.levantado && Math.hypot(r.dx, r.dy) < 0.18 * B.W;
+    if (B.calib) { calibTick(ok, ok ? r.dx : 0, ok ? r.dy : 0); return; }
+    if (!ok || S.pausado || !aberto || editando) return;
+    var dx = Math.abs(r.dx) < 0.03 ? 0 : r.dx, dy = Math.abs(r.dy) < 0.03 ? 0 : r.dy;   // ruído do sensor
+    var m = cfg.mat || MAT0, k = cfg.dpi / 800;
+    mover((m[0] * dx + m[1] * dy) * k, (m[2] * dx + m[3] * dy) * k);
+  }
+
+  function diag(r) {
+    var tx = r.contraste < 1.2 ? ['sem textura', 'ruim'] : r.contraste < 6 ? ['fraca', 'meh'] : ['boa', 'bom'];
+    var est = B.levantado ? ['levantado', 'meh'] : r.ok ? ['rastreando', 'bom'] : ['perdido', 'ruim'];
+    $('#diagT').innerHTML = B.fps + ' fps<br>textura: <b class="' + tx[1] + '">' + tx[0] + '</b><br><b class="' + est[1] + '">' + est[0] + '</b>';
+  }
+
+  function configurarCamera() {
+    var caps = {};
+    try { caps = B.track.getCapabilities ? B.track.getCapabilities() : {}; } catch (e) {}
+    function tentar(c) { try { B.track.applyConstraints({ advanced: [c] }).catch(function () {}); } catch (e) {} }
+    aplicarLanterna();
+    if (caps.focusMode && caps.focusMode.indexOf('manual') >= 0 && caps.focusDistance)
+      tentar({ focusMode: 'manual', focusDistance: caps.focusDistance.min });   // foco o mais perto possível
+  }
+  function aplicarLanterna() {
+    if (!B.track) return;
+    try { B.track.applyConstraints({ advanced: [{ torch: !!cfg.lant }] }).catch(function () {}); } catch (e) {}
+  }
+
+  function abrirCamera() {
+    pararCamera();
+    var vc = { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60 } };
+    if (cfg.cam) vc.deviceId = { exact: cfg.cam }; else vc.facingMode = { ideal: 'environment' };
+    return navigator.mediaDevices.getUserMedia({ video: vc, audio: false }).then(function (stream) {
+      B.stream = stream; B.track = stream.getVideoTracks()[0];
+      B.vid.srcObject = stream;
+      return B.vid.play().then(function () {
+        var vw = B.vid.videoWidth || 640, vh = B.vid.videoHeight || 480;
+        var maior = 128, menor = Math.max(48, Math.round(maior * Math.min(vw, vh) / Math.max(vw, vh) / 8) * 8);
+        B.W = vw >= vh ? maior : menor; B.H = vw >= vh ? menor : maior;
+        B.cv.width = B.W; B.cv.height = B.H; B.cv.classList.toggle('vert', B.H > B.W);
+        B.ctx = B.cv.getContext('2d', { willReadFrequently: true });
+        B.fluxo = new Fluxo(B.W, B.H);
+        B.bema = 0; B.levantado = false; B.fps = 0; B.nq = 0; B.tfps = 0;
+        B.ativo = true;
+        configurarCamera();
+        pedirQuadro();
+      });
+    });
+  }
+  function pararCamera() {
+    B.ativo = false;
+    if (B.stream) { B.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); }
+    B.stream = null; B.track = null; B.fluxo = null;
+  }
+
+  function iniciarBase() {
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { mostrarInicio('seguro'); return; }
+    if (B.abrindo) return;
+    B.abrindo = true;
+    abrirCamera().then(function () {
+      B.abrindo = false; B.permitido = true;
+      $('#inicio').classList.remove('aberto');
+      acordar();
+      try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el); } catch (e) {}
+      if (!cfg.mat) iniciarCalibracao();
+    }).catch(function () { B.abrindo = false; mostrarInicio('negadoCam'); });
+  }
+  function pararBase() { pararCamera(); B.calib = null; fecharGuia(); $('#diagT').textContent = 'câmera desligada'; }
+
+  // ---- trocar de câmera (celulas com várias lentes: a "macro"/ultra-angular costuma focar mais perto) ----
+  function trocarCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    navigator.mediaDevices.enumerateDevices().then(function (ds) {
+      var cams = ds.filter(function (d) { return d.kind === 'videoinput'; });
+      if (cams.length < 2) { aviso('Só encontrei uma câmera.', 2500); return; }
+      var atual = B.track && B.track.getSettings ? B.track.getSettings().deviceId : cfg.cam, i = 0;
+      for (var k = 0; k < cams.length; k++) if (cams[k].deviceId === atual) i = k;
+      var prox = cams[(i + 1) % cams.length];
+      cfg.cam = prox.deviceId; salvarCfg();
+      aviso('Câmera: ' + (prox.label || ('nº ' + ((i + 1) % cams.length + 1))), 3000);
+      if (cfg.modo === 'base') abrirCamera().catch(function () { mostrarInicio('negadoCam'); });
+    });
+  }
+
+  // ---- calibração: deslizar 10 cm para frente e 10 cm para a direita ----
+  // Mede como o movimento da imagem corresponde às direções do cursor (cobre rotação,
+  // espelhamento e escala de uma vez) e já ajusta para 800 DPI.
+  var guia = $('#guia'), guiaT = $('#guiaT'), guiaB = $('#guiaB'), guiaGo = $('#guiaGo');
+  var PASSOS = ['Deslize o celular 10 cm PARA A FRENTE (para longe de você), devagar, e pare.',
+                'Volte ao ponto de partida. Agora deslize 10 cm PARA A DIREITA, devagar, e pare.'];
+  function fecharGuia() { guia.classList.remove('aberto'); }
+  function iniciarCalibracao() {
+    if (!B.ativo) { aviso('Abra o modo Base primeiro.', 2000); return; }
+    B.calib = { passo: 0, estado: 'espera', soma: [0, 0], ult: 0, cf: null };
+    guiaTexto();
+  }
+  function guiaTexto() {
+    var c = B.calib; if (!c) return;
+    guia.classList.add('aberto');
+    guiaGo.style.display = c.estado === 'espera' ? '' : 'none';
+    guiaB.style.width = '0';
+    if (c.estado === 'espera')
+      guiaT.textContent = 'Calibrar (' + (c.passo + 1) + '/2). Apoie o celular na mesa, como um mouse. ' + PASSOS[c.passo] + ' Toque em Começar antes.';
+    else guiaT.textContent = 'Deslize agora… (' + (c.passo + 1) + '/2)';
+  }
+  guiaGo.addEventListener('click', function () {
+    var c = B.calib; if (!c) return;
+    c.estado = 'medindo'; c.soma = [0, 0]; c.ult = performance.now(); c.moveu = false;
+    B.fluxo.reiniciar(); guiaTexto();
+  });
+  $('#guiaX').addEventListener('click', function () { B.calib = null; fecharGuia(); });
+  function calibTick(ok, dx, dy) {
+    var c = B.calib, agora = performance.now();
+    if (c.estado !== 'medindo') return;
+    c.soma[0] += dx; c.soma[1] += dy;
+    var mag = Math.hypot(c.soma[0], c.soma[1]);
+    if (Math.hypot(dx, dy) > 0.2) c.ult = agora;
+    guiaB.style.width = Math.min(100, mag / 3) + '%';
+    if (mag > 30 && agora - c.ult > 900) {                  // andou e parou: terminou este passo
+      if (c.passo === 0) { c.cf = c.soma.slice(); c.passo = 1; c.estado = 'espera'; guiaTexto(); }
+      else calibConcluir(c.cf, c.soma.slice());
+    }
+  }
+  function calibConcluir(cf, cr) {
+    var det = cr[0] * cf[1] - cr[1] * cf[0], nr = Math.hypot(cr[0], cr[1]), nf = Math.hypot(cf[0], cf[1]);
+    B.calib = null; fecharGuia();
+    if (nr < 30 || nf < 30) { aviso('Quase não detectei movimento. Veja a textura na janelinha da câmera.', 4500); return; }
+    if (Math.abs(det) / (nr * nf) < 0.5) { aviso('Os dois deslizes ficaram na mesma direção. Refaça em ⚙ › Calibrar movimento.', 4500); return; }
+    var R = 10 * 800 / 2.54, f = R / det;
+    cfg.mat = [f * cf[1], -f * cf[0], f * cr[1], -f * cr[0]]; salvarCfg();
+    aviso('Calibrado! Ajuste a sensibilidade em ⚙ se quiser.', 3500);
+  }
+  window.__calibConcluir = calibConcluir;
+
   function mostrarInicio(tipo) {
     var T = $('#inicioT'), P = $('#inicioP'), A = $('#inicioA');
     A.innerHTML = '';
@@ -414,19 +621,28 @@
       b.addEventListener('click', fn); A.appendChild(b);
     }
     function irToque() { setModo('toque'); }
-    if (tipo === 'inicio') {
-      T.textContent = 'Modo sensor';
+    if (tipo === 'base') {
+      T.textContent = 'Modo Base';
+      P.textContent = 'Apoie o celular numa mesa ou mousepad, com a câmera de trás virada para a superfície (como um mouse) e deslize. Ao iniciar, o navegador pede acesso à câmera: permita. Funciona melhor com superfície que tenha textura (pano, madeira, ou a folha de textura que o PC imprime).';
+      bt('Iniciar', iniciarBase, true);
+    } else if (tipo === 'ar') {
+      T.textContent = 'Modo Ar';
       P.textContent = 'Segure o celular do jeito que vai jogar. Ao tocar em Iniciar, deixe-o parado por 1 segundo para calibrar.';
       bt('Iniciar', iniciarSensor, true);
     } else if (tipo === 'seguro') {
       T.textContent = 'Falta o HTTPS';
-      P.textContent = 'O navegador só libera o giroscópio em páginas seguras (https). Abra a versão segura: vai aparecer um aviso de "conexão não particular"; toque em Avançado e depois em Continuar. É normal, o certificado é do seu próprio PC.';
+      P.textContent = 'O navegador só libera câmera e giroscópio em páginas seguras (https). Abra a versão segura: vai aparecer um aviso de "conexão não particular"; toque em Avançado e depois em Continuar. É normal, o certificado é do seu próprio PC.';
       bt('Abrir versão segura', function () {
         fetch('/tls', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
           if (!d.portaTls) { aviso('O PC não criou o certificado. Veja o README.', 4000); return; }
           location.href = 'https://' + location.hostname + ':' + d.portaTls + '/?t=' + encodeURIComponent(token || '');
         }).catch(function () { aviso('Não consegui falar com o PC.', 3000); });
       }, true);
+      bt('Usar toque', irToque);
+    } else if (tipo === 'negadoCam') {
+      T.textContent = 'Câmera bloqueada';
+      P.textContent = 'O navegador não deixou usar a câmera. Toque no cadeado ao lado do endereço, permita a câmera e tente de novo.';
+      bt('Tentar de novo', iniciarBase, true);
       bt('Usar toque', irToque);
     } else {
       T.textContent = 'Sensor bloqueado';
@@ -445,6 +661,8 @@
   var LAYOUT_PADRAO = {   // x,y = centro (fração da área); w,h em "u" (1u = 1% do menor lado da área)
     land: { L: { x: .84, y: .60, w: 34, h: 34 }, R: { x: .16, y: .60, w: 34, h: 34 }, M: { x: .84, y: .17, w: 24, h: 20 },
             U: { x: .10, y: .17, w: 22, h: 20 }, D: { x: .26, y: .17, w: 22, h: 20 }, P: { x: .50, y: .80, w: 30, h: 18 } },
+    basep: { L: { x: .24, y: .14, w: 36, h: 26 }, R: { x: .76, y: .14, w: 36, h: 26 }, M: { x: .50, y: .14, w: 13, h: 13 },
+             U: { x: .50, y: .055, w: 13, h: 11 }, D: { x: .50, y: .225, w: 13, h: 11 }, P: { x: .13, y: .50, w: 20, h: 16 } },
     port: { L: { x: .50, y: .80, w: 88, h: 30 }, R: { x: .77, y: .50, w: 42, h: 24 }, M: { x: .23, y: .50, w: 42, h: 24 },
             U: { x: .23, y: .17, w: 42, h: 22 }, D: { x: .77, y: .17, w: 42, h: 22 }, P: { x: .50, y: .33, w: 50, h: 14 } }
   };
@@ -454,8 +672,9 @@
   var els = {};
 
   function orient() { return jogo.clientWidth > jogo.clientHeight ? 'land' : 'port'; }
+  function chave() { var o = orient(); return (cfg.modo === 'base' && o === 'port') ? 'basep' : o; }
   function pos(id) {
-    var o = orient(), d = LAYOUT_PADRAO[o][id], s = (salvoLay[o] && salvoLay[o][id]) || {};
+    var o = chave(), d = LAYOUT_PADRAO[o][id], s = (salvoLay[o] && salvoLay[o][id]) || {};
     return { x: s.x !== undefined ? s.x : d.x, y: s.y !== undefined ? s.y : d.y, s: s.s !== undefined ? s.s : 1, w: d.w, h: d.h };
   }
   function aplicarLayout() {
@@ -469,7 +688,7 @@
     }
   }
   function guardarPos(id, x, y, s) {
-    var o = orient(); salvoLay[o] = salvoLay[o] || {};
+    var o = chave(); salvoLay[o] = salvoLay[o] || {};
     var a = salvoLay[o][id] || (salvoLay[o][id] = {});
     if (x !== null) a.x = x; if (y !== null) a.y = y; if (s !== null) a.s = s;
     gravarLS('layout', JSON.stringify(salvoLay));
@@ -530,32 +749,36 @@
   function editar(on) {
     editando = on; jogo.classList.toggle('editando', on);
     if (on) {
-      setModo('sensor', true); $('#inicio').classList.remove('aberto');
+      if (cfg.modo === 'toque') setModo('base', true);
+      $('#inicio').classList.remove('aberto');
       sel = null; for (var k in els) els[k].classList.remove('sel');
       $('#textoedit').textContent = 'Arraste os botões para onde seus dedos ficam melhor. Toque em um para mudar o tamanho.';
-    } else if (cfg.modo === 'sensor' && !S.permitido) mostrarInicio('inicio');
+    } else if (cfg.modo === 'base' && !B.ativo) mostrarInicio('base');
+    else if (cfg.modo === 'ar' && !S.permitido) mostrarInicio('ar');
     aplicarLayout();
   }
   $('#edpronto').addEventListener('click', function () { editar(false); });
-  $('#edpadrao').addEventListener('click', function () { var o = orient(); delete salvoLay[o]; gravarLS('layout', JSON.stringify(salvoLay)); aplicarLayout(); });
+  $('#edpadrao').addEventListener('click', function () { var o = chave(); delete salvoLay[o]; gravarLS('layout', JSON.stringify(salvoLay)); aplicarLayout(); });
   window.addEventListener('resize', aplicarLayout);
   window.addEventListener('orientationchange', function () { setTimeout(aplicarLayout, 200); });
 
   // ---------- trocar de modo ----------
   var app = $('#app');
+  var TEXTO_CENTRO = { base: 'Deslize o celular na mesa, como um mouse', ar: 'Gire o celular para mover o mouse', toque: '' };
   function setModo(m, semSalvar) {
     cfg.modo = m; if (!semSalvar) salvarCfg();
     app.className = 'modo-' + m;
     var bs = document.querySelectorAll('.modos button');
     for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('sel', bs[i].dataset.modo === m);
     soltarTudo();
-    if (m === 'sensor') {
-      aplicarLayout();
-      if (editando) return;
-      if (S.permitido) iniciarSensor(); else mostrarInicio('inicio');
-    } else {
-      pararSensor(); $('#inicio').classList.remove('aberto');
-    }
+    pararSensor(); pararBase();
+    $('#inicio').classList.remove('aberto');
+    $('#centro').textContent = TEXTO_CENTRO[m] || '';
+    if (m === 'toque') return;
+    aplicarLayout();
+    if (editando) return;
+    if (m === 'ar') { if (S.permitido) iniciarSensor(); else mostrarInicio('ar'); }
+    else { if (B.permitido) iniciarBase(); else mostrarInicio('base'); }
   }
   var mb = document.querySelectorAll('.modos button');
   for (var i = 0; i < mb.length; i++) mb[i].addEventListener('click', function () { if (editando) return; setModo(this.dataset.modo); });
@@ -651,8 +874,8 @@
 
   // ---------- painel de ajustes ----------
   var painel = $('#painel');
-  var SL = [['sensH', 'sensHV', 1], ['sensV', 'sensVV', 1], ['sens', 'sensV2', 1], ['acel', 'acelV', 2], ['rol', 'rolV', 1]];
-  var CK = [['invH', 'invH'], ['invV', 'invV'], ['nat', 'nat'], ['toque', 'toque2'], ['vib', 'vib']];
+  var SL = [['dpi', 'dpiV', 0], ['sensH', 'sensHV', 1], ['sensV', 'sensVV', 1], ['sens', 'sensV2', 1], ['acel', 'acelV', 2], ['rol', 'rolV', 1]];
+  var CK = [['lant', 'lant'], ['invH', 'invH'], ['invV', 'invV'], ['nat', 'nat'], ['toque', 'toque2'], ['vib', 'vib']];
   function preencher() {
     SL.forEach(function (r) { $('#' + r[0]).value = cfg[r[0]]; $('#' + r[1]).textContent = (+cfg[r[0]]).toFixed(r[2]); });
     CK.forEach(function (r) { $('#' + r[1]).checked = cfg[r[0]]; });
@@ -661,6 +884,7 @@
     $('#' + r[0]).addEventListener('input', function () { cfg[r[0]] = parseFloat(this.value); $('#' + r[1]).textContent = cfg[r[0]].toFixed(r[2]); salvarCfg(); });
   });
   CK.forEach(function (r) { $('#' + r[1]).addEventListener('change', function () { cfg[r[0]] = this.checked; salvarCfg(); }); });
+  $('#lant').addEventListener('change', aplicarLanterna);
   $('#engrenagem').addEventListener('click', function () { preencher(); painel.classList.add('aberto'); });
   $('#fechar').addEventListener('click', function () { painel.classList.remove('aberto'); });
   $('#padrao').addEventListener('click', function () { var m = cfg.modo; for (var k in PADRAO) cfg[k] = PADRAO[k]; cfg.modo = m; salvarCfg(); salvoLay = {}; gravarLS('layout', '{}'); aplicarLayout(); preencher(); });
@@ -670,20 +894,27 @@
   });
   $('#calib').addEventListener('click', function () {
     painel.classList.remove('aberto');
-    if (S.ativo) calibrar(); else aviso('Inicie o modo sensor primeiro.', 2000);
+    if (S.ativo) calibrar(); else aviso('Abra o modo Ar primeiro.', 2000);
   });
   $('#editar').addEventListener('click', function () { painel.classList.remove('aberto'); editar(true); });
+  $('#editarB').addEventListener('click', function () { painel.classList.remove('aberto'); editar(true); });
+  $('#calMov').addEventListener('click', function () { painel.classList.remove('aberto'); iniciarCalibracao(); });
+  $('#trocaCam').addEventListener('click', function () { painel.classList.remove('aberto'); trocarCamera(); });
 
   // ---------- início ----------
   criarBotoes();
   conectar();
   acordar();
-  setModo(cfg.modo === 'toque' ? 'toque' : 'sensor', true);
+  setModo(cfg.modo === 'toque' ? 'toque' : cfg.modo === 'ar' ? 'ar' : 'base', true);
   // painéis com tamanho conhecido só depois do primeiro desenho
   requestAnimationFrame(aplicarLayout);
 
   // gancho de teste (não é usado pela página)
-  window.__cm = { S: S, cfg: cfg };
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { if (cfg.modo === 'base') pararCamera(); }
+    else if (cfg.modo === 'base' && B.permitido && !B.ativo) iniciarBase();
+  });
+  window.__cm = { S: S, B: B, cfg: cfg, tratarFluxo: tratarFluxo };
 })();
 </script>
 </body>

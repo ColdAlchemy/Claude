@@ -1,57 +1,78 @@
 # Celular Mouse
 
 ## Objetivo
-Usar o celular como mouse do PC Windows, com latência mínima e sem instalar
-nada (o celular usa só o navegador). Dois modos:
+Usar o celular como mouse do PC Windows, sem instalar nada (o celular usa só o
+navegador). Três modos (botões no topo da tela do celular):
 
-- **Sensor (para jogar):** você *move o celular no ar* e o cursor acompanha,
-  como um mouse aéreo / mira por giroscópio. A tela só tem botões, nos
-  lugares onde seus dedos ficam.
+- **Base (principal):** você **desliza o celular numa mesa ou mousepad**, como um
+  mouse de verdade. A câmera de trás funciona como o sensor óptico de um mouse.
+  A tela só tem os botões, nos lugares dos seus dedos.
+- **Ar:** você move o celular no ar e o cursor acompanha (giroscópio). Ficou em
+  segundo plano: ele só mede giro, não posição, e por isso "anda" um pouco.
 - **Toque:** a tela do celular vira um touchpad.
 
 ## Status
-`em andamento` — modo toque testado em uso real no PC. Modo sensor testado na
-nuvem com movimentos simulados; **falta o primeiro teste real** (giroscópio do
-seu celular + HTTPS no Windows).
+`em andamento` — modo Toque já usado no PC real. Modos Base e Ar testados na
+nuvem com câmera e sensores simulados; **o modo Base ainda não foi testado com
+a câmera de um celular de verdade** (é o ponto de maior incerteza, ver "Limites").
 
 ## Como rodar
-1. No PC, dê **duplo clique em `iniciar.bat`** (pasta `projetos\celular-mouse`).
-   Na primeira vez ele cria o arquivo `cert.pfx` (alguns segundos; não usa a
-   loja de certificados do Windows) e o Windows pergunta sobre o Firewall: marque **Redes particulares** e **Permitir acesso**.
-2. Abre uma janela com um **QR code**. Deixe a aba **"Com sensor (jogos)"**.
-3. No celular (mesmo Wi-Fi), aponte a câmera para o QR code e toque no link.
-4. O navegador avisa **"conexão não é particular"**. É normal (o certificado é
-   do seu próprio PC; o giroscópio só funciona em páginas https). Toque em
-   **Avançado** e depois em **Continuar**. Só na primeira vez.
-5. Toque em **Iniciar**, deixe o celular parado por 1 segundo (calibração) e
-   pronto: gire o celular.
+1. No PC, **duplo clique em `iniciar.bat`** (pasta `projetos\celular-mouse`).
+   Na primeira vez ele cria o `cert.pfx` e o Windows pergunta sobre o Firewall:
+   marque **Redes particulares** e **Permitir acesso**.
+2. Abre uma janela com um **QR code** (aba "Com sensor"). No celular, no mesmo
+   Wi-Fi, escaneie com a câmera e toque no link.
+3. O navegador avisa **"conexão não é particular"**: toque em **Avançado** e
+   **Continuar** (o certificado é do seu PC; câmera e giroscópio exigem https).
+4. **Imprima a folha de textura** (link na janela do QR, ou `/padrao` no
+   navegador do PC) e cole na mesa: uma mesa lisa não tem nada para a câmera
+   "enxergar".
 
-Dica: no menu do navegador, "Adicionar à tela inicial" cria um ícone.
-
-## Modo sensor: como funciona
-- **Girar para os lados** move o cursor na horizontal; **inclinar para cima/baixo**
-  move na vertical. Você mira com a **traseira** do celular, como se ele
-  fosse uma janela: apontou a traseira para a esquerda, o mouse vai para a
-  esquerda. Funciona em pé, de lado (paisagem) ou deitado.
-- Se alguma direção ficar ao contrário: ⚙ → **Inverter horizontal/vertical**.
-- **PAUSA** (segurar) congela o cursor, como levantar o mouse da mesa: use
-  para voltar o celular à posição confortável sem mover a mira.
-- O giroscópio tem um pequeno "desvio" com o tempo. Ele se corrige sozinho
-  quando o celular fica parado; se a mira "andar", use ⚙ → **Calibrar agora**.
-- A tela do celular não apaga enquanto você usa (Wake Lock).
-
-### Botões: você escolhe onde ficam
-⚙ → **Mudar botões de lugar**: arraste cada botão para onde seus dedos ficam
-melhor e use a barra para mudar o tamanho (toque no botão para selecioná-lo).
-O layout é guardado separado para celular em pé e deitado.
+## Modo Base: como usar
+1. Toque em **Iniciar** e permita a **câmera**. A lanterna acende (ela
+   funciona como o LED de um mouse óptico).
+2. Na primeira vez abre a **calibração**: apoie o celular na folha, como um
+   mouse, e (1) deslize **10 cm para a frente** e pare, (2) volte e deslize
+   **10 cm para a direita** e pare. Isso descobre sozinho a direção e a escala
+   (qualquer posição da câmera serve) e deixa em 800 DPI.
+3. Use. A janelinha embaixo mostra a câmera, os quadros por segundo, a textura
+   (`boa`/`fraca`/`sem textura`) e `rastreando`/`levantado`/`perdido`.
+4. **Levantar o celular** da folha congela o cursor sozinho (detecta a mudança
+   de luz) e volta ao rastrear ao apoiar de novo, como levantar um mouse.
+   O botão **PAUSA** (segurar) também congela.
+5. ⚙: **Sensibilidade (DPI)**, **Lanterna**, **Calibrar movimento**,
+   **Trocar câmera** e **Mudar botões de lugar** (arraste os botões para onde
+   seus dedos ficam; layout salvo por orientação).
 
 | Botão | O que faz |
 |---|---|
-| ESQUERDO / DIREITO / MEIO | Cliques (dá para segurar) |
-| ▲ / ▼ | Roda do mouse (segurando, repete) — troca de arma, zoom |
+| ESQUERDO / DIREITO / MEIO | Cliques (dá para segurar e arrastar) |
+| ▲ / ▼ | Roda do mouse (segurando, repete) |
 | PAUSA | Segurar = congela o cursor |
 
-Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões.
+### Limites do modo Base (leia)
+- **Velocidade máxima.** A câmera do navegador entrega 30–60 quadros por
+  segundo e enxerga só alguns milímetros da superfície. O rastreador aguenta
+  cerca de 12% do campo de visão por quadro, o que dá algo como **10–20 cm/s**.
+  Serve para apontar, arrastar e mirar devagar; **flicks rápidos de jogo
+  vão "perder" o movimento** (o cursor para em vez de pular para um lugar errado).
+- **Foco.** A câmera fica a poucos milímetros da superfície, mais perto do que
+  a maioria das câmeras foca. Imagem desfocada ainda funciona (a folha de
+  textura tem manchas grandes de propósito), mas melhora muito se o celular
+  tiver capinha grossa (afasta a lente) ou se **Trocar câmera** achar uma lente
+  que foca perto (macro / ultra-angular).
+- **Superfície.** Precisa de textura. Vidro, mesa branca lisa ou mousepad
+  liso: `sem textura`. Use a folha impressa.
+- **Taxa.** O cursor atualiza no ritmo da câmera (30–60 Hz), não 1000 Hz como
+  um mouse. É perceptível em jogos rápidos.
+- Se `rastreando` não aparece ao deslizar devagar, abra a janelinha da câmera:
+  imagem preta = pouca luz (ligue a Lanterna); imagem lisa = falta textura.
+
+## Modo Ar (girar o celular)
+Gire para os lados = cursor na horizontal; incline = vertical (você mira com a
+traseira, como numa janela). Se uma direção ficar ao contrário: ⚙ › Inverter.
+⚙ › **Calibrar giroscópio** com o celular parado. O giroscópio tem desvio e só
+mede giro, então não é preciso como o modo Base.
 
 ## Modo toque
 | Gesto | O que faz |
@@ -96,9 +117,10 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
   vez de empilhados.
 - O PC injeta o movimento direto com `SendInput`.
 - Medido na nuvem (localhost, com TLS): menos de 1 ms no servidor.
-- **Limite do sensor:** o navegador entrega o giroscópio a ~60 vezes por
-  segundo (≈ 16 ms entre leituras). Somado ao Wi-Fi (2–10 ms), fica na casa de
-  20–30 ms. Para jogo competitivo, Wi-Fi 5 GHz e perto do roteador ajuda muito.
+- **Limite dos sensores:** giroscópio e câmera chegam ao navegador a 30–60
+  vezes por segundo (16–33 ms entre leituras). Somado ao Wi-Fi (2–10 ms), são
+  algumas dezenas de ms: bom para desktop e mira lenta, limitado para jogo
+  competitivo. Wi-Fi 5 GHz e perto do roteador ajuda.
 
 ## Estrutura
 | Arquivo | Para que serve |
@@ -107,7 +129,9 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
 | `servidor.ps1` | Cria o `cert.pfx` (1ª vez), compila e inicia o servidor |
 | `certificado.cs` | Gera o certificado HTTPS (exige .NET Framework 4.7.2+, Windows 10/11 atual) |
 | `servidor.cs` | Servidor: HTTP + HTTPS + WebSocket + `SendInput` |
-| `web/index.html` | Tela do celular (sensor, toque, botões, ajustes) |
+| `web/index.html` | Tela do celular (Base, Ar, Toque, botões, ajustes) |
+| `web/fluxo.js` | Rastreador de movimento pela câmera (fluxo óptico, Lucas-Kanade em pirâmide) |
+| `web/padrao.html` | Folha de textura para imprimir |
 | `web/qr.html`, `web/qrcode.js` | Página do QR no PC (`qrcode-generator`, MIT) |
 | `liberar-firewall.bat` | Opcional: libera as portas 8765-8774 no Firewall |
 
@@ -121,6 +145,13 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
   bloqueio/UAC, a menos que o `iniciar.bat` rode como administrador.
 
 ## Decisões e anotações
+- 2026-10-31: o usuário não quer mover o celular no ar, e sim deslizá-lo numa
+  base como um mouse. Giroscópio/acelerômetro não dão posição (a integração
+  dupla acumula erro), então o modo Base usa a câmera traseira como sensor
+  óptico: fluxo óptico global por quadro (`fluxo.js`), calibração de 2 deslizes
+  que resolve rotação/espelhamento/escala numa matriz 2x2, detecção de
+  "levantou" por salto de brilho. Medido em teste sintético: erro < 0.01 px,
+  ~0,4 ms por quadro, alcance ~15 px por quadro (em 128 px de largura).
 - 2026-10-31: servidor em C# compilado pelo PowerShell (zero instalação).
   Código em C# 5 por causa do PowerShell 5.1.
 - 2026-10-31: modo sensor com `devicemotion` (giroscópio + gravidade).
@@ -137,7 +168,8 @@ Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões
   giroscópio de um celular real.
 
 ## Próximos passos
-- [ ] Testar no PC e no celular reais; ajustar sensibilidade padrão e sinais.
-- [ ] Menos latência: API `Gyroscope` do Chrome (taxa maior que 60 Hz).
+- [ ] **Testar o modo Base com a câmera do celular real** (foco, textura, velocidade máxima).
+- [ ] Base: ler a câmera em resolução/FPS maiores quando o celular permitir; exposição manual curta (menos borrão).
+- [ ] Base: ajuste fino da detecção de "levantou" com a câmera real.
 - [ ] Teclado (WASD / digitar) no celular.
 - [ ] Mais botões configuráveis (teclas extras para jogos).
