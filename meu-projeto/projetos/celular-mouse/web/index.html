@@ -20,20 +20,28 @@
     touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   }
   #app {
-    display: flex; flex-direction: column; height: 100dvh; gap: 10px;
-    padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-             max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    display: flex; flex-direction: column; height: 100dvh; gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+             max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   }
-  header { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
-  #estado { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 14px; }
-  #ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--ruim); }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+  #estado { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 14px; white-space: nowrap; min-width: 0; }
+  #ponto { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ruim); }
   #ponto.ok { background: var(--ok); }
   #ponto.espera { background: var(--aviso); }
   .icone {
     width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--borda);
-    background: var(--pad); color: var(--txt); font-size: 20px; display: grid; place-items: center;
+    background: var(--pad); color: var(--txt); font-size: 20px; display: grid; place-items: center; flex: none;
   }
+  .modos { display: flex; border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; background: var(--pad); flex: none; }
+  .modos button { border: 0; background: none; color: var(--suave); font: inherit; font-size: 14px; padding: 0 14px; height: 42px; }
+  .modos button.sel { background: #1f3b63; color: var(--txt); }
 
+  #app.modo-sensor #toque { display: none; }
+  #app.modo-toque #jogo { display: none; }
+
+  /* ---------- modo toque ---------- */
+  #toque { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
   #area { position: relative; flex: 1; display: flex; gap: 10px; min-height: 0; }
   #pad {
     flex: 1; position: relative; border-radius: 18px; border: 1px solid var(--borda);
@@ -50,8 +58,7 @@
     writing-mode: vertical-rl; text-orientation: mixed;
   }
   #rolagem.ativo { border-color: var(--acento); color: var(--txt); }
-
-  #botoes { display: flex; gap: 10px; height: 20vh; min-height: 96px; max-height: 170px; }
+  #botoes { display: flex; gap: 10px; height: 20vh; min-height: 80px; max-height: 170px; }
   .btn {
     border-radius: 18px; border: 1px solid var(--borda); background: var(--pad); color: var(--suave);
     display: grid; place-items: center; font-size: 14px; letter-spacing: .04em;
@@ -59,67 +66,142 @@
   .btn.ativo { background: #1f3b63; border-color: var(--acento); color: var(--txt); }
   #b0 { flex: 3; } #b2 { flex: 1; } #b1 { flex: 3; }
 
-  #painel {
-    position: fixed; inset: 0; background: rgba(8,10,14,.82); display: none; align-items: flex-end; z-index: 10;
+  /* ---------- modo sensor ---------- */
+  #jogo {
+    position: relative; flex: 1; min-height: 0; border-radius: 18px; border: 1px dashed var(--borda); overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #141a22, var(--bg));
   }
+  #jogo .centro { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #3a4452; font-size: 14px; pointer-events: none; padding: 0 30%; }
+  .gb {
+    position: absolute; border-radius: 22px; border: 1px solid var(--borda); background: rgba(22,27,34,.92); color: var(--suave);
+    display: grid; place-items: center; font-size: 14px; letter-spacing: .05em; font-weight: 600; text-align: center;
+  }
+  .gb.ativo { background: #1f3b63; border-color: var(--acento); color: var(--txt); }
+  .gb.pausa.ativo { background: #4a3a0e; border-color: var(--aviso); color: #ffe7a3; }
+  #jogo.editando .gb { border-style: dashed; border-color: var(--acento); }
+  #jogo.editando .gb.sel { background: #1f3b63; }
+  #barraedit {
+    position: absolute; left: 10px; right: 10px; bottom: 10px; display: none; gap: 10px; align-items: center;
+    background: var(--pad); border: 1px solid var(--borda); border-radius: 16px; padding: 10px 12px; z-index: 5;
+  }
+  #jogo.editando #barraedit { display: flex; flex-wrap: wrap; }
+  #barraedit .t { flex: 1 1 100%; font-size: 13px; color: var(--suave); }
+  #barraedit input[type=range] { flex: 1; min-width: 120px; accent-color: var(--acento); }
+  #barraedit button { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--borda); background: var(--bg); color: var(--txt); font: inherit; font-size: 14px; }
+  #barraedit button.principal { background: var(--acento); border-color: var(--acento); color: #04101f; font-weight: 600; }
+
+  #inicio {
+    position: absolute; inset: 0; z-index: 6; display: none; place-items: center; text-align: center; padding: 24px;
+    background: rgba(14,17,22,.96);
+  }
+  #inicio.aberto { display: grid; }
+  #inicio h2 { margin: 0 0 8px; font-size: 22px; }
+  #inicio p { margin: 0 0 18px; color: var(--suave); font-size: 15px; max-width: 420px; }
+  #inicio .acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  #inicio button { padding: 16px 28px; border-radius: 14px; border: 1px solid var(--borda); background: var(--pad); color: var(--txt); font: inherit; font-size: 17px; }
+  #inicio button.principal { background: var(--acento); border-color: var(--acento); color: #04101f; font-weight: 700; }
+  #aviso {
+    position: fixed; left: 50%; top: 70px; transform: translateX(-50%); z-index: 20; background: #1f3b63; color: var(--txt);
+    border: 1px solid var(--acento); border-radius: 14px; padding: 12px 18px; font-size: 15px; display: none; text-align: center; max-width: 90vw;
+  }
+  #aviso.aberto { display: block; }
+
+  /* ---------- ajustes ---------- */
+  #painel { position: fixed; inset: 0; background: rgba(8,10,14,.82); display: none; align-items: flex-end; z-index: 10; }
   #painel.aberto { display: flex; }
   #cartao {
-    width: 100%; max-height: 85dvh; overflow: auto; background: var(--pad); border-top: 1px solid var(--borda);
-    border-radius: 22px 22px 0 0; padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
-    touch-action: pan-y;
+    width: 100%; max-height: 88dvh; overflow: auto; background: var(--pad); border-top: 1px solid var(--borda);
+    border-radius: 22px 22px 0 0; padding: 20px 20px calc(24px + env(safe-area-inset-bottom)); touch-action: pan-y;
   }
   #cartao h2 { margin: 0 0 14px; font-size: 18px; }
-  .linha { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 18px; }
+  #cartao h3 { margin: 20px 0 12px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  .linha { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 16px; }
   .linha label { flex: 0 0 38%; font-size: 15px; }
   .linha input[type=range] { flex: 1; accent-color: var(--acento); min-width: 0; touch-action: pan-y; }
   .linha .v { width: 34px; text-align: right; color: var(--suave); font-variant-numeric: tabular-nums; font-size: 14px; }
   .linha input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--acento); }
-  .acoes { display: flex; gap: 10px; margin-top: 4px; }
+  .acoes { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
   .acoes button {
     flex: 1; padding: 14px; border-radius: 12px; border: 1px solid var(--borda);
-    background: var(--bg); color: var(--txt); font: inherit;
+    background: var(--bg); color: var(--txt); font: inherit; min-width: 110px;
   }
   .acoes button.principal { background: var(--acento); border-color: var(--acento); color: #04101f; font-weight: 600; }
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" class="modo-sensor">
   <header>
     <div id="estado"><span id="ponto" class="espera"></span><span id="texto">Conectando…</span></div>
+    <div class="modos">
+      <button data-modo="sensor" class="sel">Sensor</button>
+      <button data-modo="toque">Toque</button>
+    </div>
     <button class="icone" id="engrenagem" aria-label="Ajustes">⚙</button>
   </header>
 
-  <div id="area">
-    <div id="pad">
-      <div id="dica">
-        <b>Arraste</b> para mover<br>
-        <b>Toque</b> = clique · <b>2 dedos tocam</b> = botão direito<br>
-        <b>2 dedos arrastam</b> = rolar<br>
-        <b>Toque duas vezes e arraste</b> = segurar e arrastar
+  <div id="toque">
+    <div id="area">
+      <div id="pad">
+        <div id="dica">
+          <b>Arraste</b> para mover<br>
+          <b>Toque</b> = clique · <b>2 dedos tocam</b> = botão direito<br>
+          <b>2 dedos arrastam</b> = rolar<br>
+          <b>Toque duas vezes e arraste</b> = segurar e arrastar
+        </div>
       </div>
+      <div id="rolagem">ROLAR</div>
     </div>
-    <div id="rolagem">ROLAR</div>
+    <div id="botoes">
+      <div class="btn" id="b0">ESQUERDO</div>
+      <div class="btn" id="b2">MEIO</div>
+      <div class="btn" id="b1">DIREITO</div>
+    </div>
   </div>
 
-  <div id="botoes">
-    <div class="btn" id="b0">ESQUERDO</div>
-    <div class="btn" id="b2">MEIO</div>
-    <div class="btn" id="b1">DIREITO</div>
+  <div id="jogo">
+    <div class="centro">Gire o celular para mover o mouse</div>
+    <div id="barraedit">
+      <div class="t" id="textoedit">Arraste os botões para onde seus dedos ficam melhor. Toque em um para mudar o tamanho.</div>
+      <input id="tamsel" type="range" min="0.5" max="2" step="0.05" value="1" aria-label="Tamanho do botão">
+      <button id="edpadrao">Restaurar</button>
+      <button id="edpronto" class="principal">Pronto</button>
+    </div>
+    <div id="inicio">
+      <div>
+        <h2 id="inicioT">Modo sensor</h2>
+        <p id="inicioP">Segure o celular do jeito que vai jogar. Ao tocar em Iniciar, deixe-o parado por 1 segundo para calibrar.</p>
+        <div class="acoes" id="inicioA">
+          <button class="principal">Iniciar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+<div id="aviso"></div>
 
 <div id="painel">
   <div id="cartao">
     <h2>Ajustes</h2>
-    <div class="linha"><label for="sens">Velocidade</label><input id="sens" type="range" min="0.5" max="6" step="0.1"><span class="v" id="sensV"></span></div>
+    <h3>Sensor (girar o celular)</h3>
+    <div class="linha"><label for="sensH">Sens. horizontal</label><input id="sensH" type="range" min="2" max="40" step="0.5"><span class="v" id="sensHV"></span></div>
+    <div class="linha"><label for="sensV">Sens. vertical</label><input id="sensV" type="range" min="2" max="40" step="0.5"><span class="v" id="sensVV"></span></div>
+    <div class="linha"><label for="invH">Inverter horizontal</label><input id="invH" type="checkbox"></div>
+    <div class="linha"><label for="invV">Inverter vertical</label><input id="invV" type="checkbox"></div>
+    <div class="acoes">
+      <button id="calib">Calibrar agora</button>
+      <button id="editar">Mudar botões de lugar</button>
+    </div>
+    <h3>Toque na tela</h3>
+    <div class="linha"><label for="sens">Velocidade</label><input id="sens" type="range" min="0.5" max="6" step="0.1"><span class="v" id="sensV2"></span></div>
     <div class="linha"><label for="acel">Aceleração</label><input id="acel" type="range" min="0" max="1.5" step="0.05"><span class="v" id="acelV"></span></div>
     <div class="linha"><label for="rol">Rolagem</label><input id="rol" type="range" min="0.5" max="4" step="0.1"><span class="v" id="rolV"></span></div>
     <div class="linha"><label for="nat">Rolagem natural</label><input id="nat" type="checkbox"></div>
-    <div class="linha"><label for="toque">Tocar para clicar</label><input id="toque" type="checkbox"></div>
+    <div class="linha"><label for="toque2">Tocar para clicar</label><input id="toque2" type="checkbox"></div>
+    <h3>Geral</h3>
     <div class="linha"><label for="vib">Vibrar ao clicar</label><input id="vib" type="checkbox"></div>
     <div class="acoes">
       <button id="tela">Tela cheia</button>
-      <button id="padrao">Restaurar</button>
+      <button id="padrao">Restaurar tudo</button>
       <button id="fechar" class="principal">Pronto</button>
     </div>
   </div>
@@ -129,41 +211,45 @@
 (function () {
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
+  var IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   // ---------- ajustes (guardados no celular) ----------
-  var PADRAO = { sens: 2.2, acel: 0.6, rol: 1.5, nat: true, toque: true, vib: true };
+  var PADRAO = { modo: 'sensor', sensH: 10, sensV: 10, invH: false, invV: false,
+                 sens: 2.2, acel: 0.6, rol: 1.5, nat: true, toque: true, vib: true };
   var cfg = {};
   function lerLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function gravarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   (function () {
     var salvo = {};
-    try { salvo = JSON.parse(lerLS('cfg') || '{}'); } catch (e) {}
+    try { salvo = JSON.parse(lerLS('cfg2') || '{}'); } catch (e) {}
     for (var k in PADRAO) cfg[k] = (k in salvo) ? salvo[k] : PADRAO[k];
   })();
-  function salvarCfg() { gravarLS('cfg', JSON.stringify(cfg)); }
+  function salvarCfg() { gravarLS('cfg2', JSON.stringify(cfg)); }
 
-  // ---------- token (vem no link do QR code) ----------
   var token = new URLSearchParams(location.search).get('t');
   if (token) gravarLS('token', token); else token = lerLS('token');
+
+  function aviso(msg, ms) {
+    var a = $('#aviso'); a.textContent = msg; a.classList.add('aberto');
+    clearTimeout(aviso.t);
+    if (ms) aviso.t = setTimeout(function () { a.classList.remove('aberto'); }, ms);
+  }
+  function fecharAviso() { $('#aviso').classList.remove('aberto'); }
 
   // ---------- conexão ----------
   var ws = null, aberto = false, jaAbriu = false, falhas = 0, rtt = null;
   var ponto = $('#ponto'), texto = $('#texto');
   var pings = {}, pingId = 1;
-
   function mostrar(cls, msg) { ponto.className = cls; texto.textContent = msg; }
 
   function conectar() {
-    if (!token) { mostrar('', 'Escaneie o QR code que aparece no PC'); return; }
+    if (!token) { mostrar('', 'Escaneie o QR code do PC'); return; }
     if (ws && (ws.readyState === 0 || ws.readyState === 1)) return;
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
     try { ws = new WebSocket(proto + location.host + '/ws?t=' + encodeURIComponent(token)); }
     catch (e) { agendar(); return; }
     ws.binaryType = 'arraybuffer';
-    ws.onopen = function () {
-      aberto = true; jaAbriu = true; falhas = 0; rtt = null;
-      mostrar('ok', 'Conectado');
-    };
+    ws.onopen = function () { aberto = true; jaAbriu = true; falhas = 0; rtt = null; mostrar('ok', 'Conectado'); };
     ws.onmessage = function (ev) {
       var v = new DataView(ev.data);
       if (v.getUint8(0) !== 5) return;
@@ -185,11 +271,7 @@
     ws.onerror = function () {};
   }
   var timer = 0;
-  function agendar() {
-    clearTimeout(timer);
-    timer = setTimeout(conectar, Math.min(300 * (falhas + 1), 2000));
-  }
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) conectar(); });
+  function agendar() { clearTimeout(timer); timer = setTimeout(conectar, Math.min(300 * (falhas + 1), 2000)); }
   setInterval(function () {
     if (!aberto) return;
     var id = pingId++, b = new DataView(new ArrayBuffer(5));
@@ -199,13 +281,20 @@
     delete pings[id - 5];
   }, 1000);
 
+  // ---------- tela sempre acesa ----------
+  var trava = null;
+  function acordar() {
+    try {
+      if (navigator.wakeLock && !document.hidden)
+        navigator.wakeLock.request('screen').then(function (l) { trava = l; }).catch(function () {});
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { conectar(); acordar(); } });
+
   // ---------- envio (buffer reaproveitado: send() copia os dados) ----------
   var buf = new ArrayBuffer(5), dv = new DataView(buf);
   function clamp(n) { return n > 32767 ? 32767 : n < -32768 ? -32768 : n; }
-  function enviar2(tipo, a, b) {
-    dv.setUint8(0, tipo); dv.setInt16(1, a, true); dv.setInt16(3, b, true);
-    ws.send(buf);
-  }
+  function enviar2(tipo, a, b) { dv.setUint8(0, tipo); dv.setInt16(1, a, true); dv.setInt16(3, b, true); ws.send(buf); }
   function botao(i, baixo) {
     if (!aberto) return;
     dv.setUint8(0, 2); dv.setUint8(1, i); dv.setUint8(2, baixo ? 1 : 0);
@@ -222,12 +311,10 @@
     descarregar();
   }
   function descarregar() {
-    if (!aberto || (px === 0 && py === 0)) { if (!aberto) { px = py = 0; } return; }
+    if (!aberto) { px = py = 0; return; }
+    if (px === 0 && py === 0) return;
     if (ws.bufferedAmount > 256) { if (!raf) raf = requestAnimationFrame(function () { raf = 0; descarregar(); }); return; }
-    while (px !== 0 || py !== 0) {
-      var sx = clamp(px), sy = clamp(py);
-      enviar2(1, sx, sy); px -= sx; py -= sy;
-    }
+    while (px !== 0 || py !== 0) { var sx = clamp(px), sy = clamp(py); enviar2(1, sx, sy); px -= sx; py -= sy; }
   }
   var rolV = 0, rolH = 0;
   function rolar(dx, dy) {
@@ -239,17 +326,252 @@
     if (aberto) enviar2(3, clamp(iv), clamp(ih));
   }
 
-  // ---------- toques no touchpad ----------
+  // =====================================================================
+  //  MODO SENSOR: girar o celular move o mouse
+  // =====================================================================
+  // Usamos a velocidade de rotação (giroscópio) projetada na direção da gravidade:
+  //  - girar para os lados (em torno da vertical do mundo)  -> mouse horizontal
+  //  - inclinar para cima/baixo (eixo horizontal da tela)   -> mouse vertical
+  // Assim funciona em pé, deitado ou de lado, sem depender da orientação da tela.
+  var S = { ativo: false, permitido: false, tem: false, gx: 0, gy: 0, gz: 9.8, ultimo: 0,
+            bias: [0, 0, 0], calib: null, parado: 0, pausado: false };
+
+  function zona(v) { var a = Math.abs(v); return a < 0.3 ? 0 : (v > 0 ? a - 0.3 : -(a - 0.3)); }
+
+  function aoMover(e) {
+    var r = e.rotationRate, g = e.accelerationIncludingGravity;
+    if (!r || r.alpha === null || r.alpha === undefined || !g || g.x === null || g.x === undefined) return;
+    var t = e.timeStamp || performance.now();
+    var dt = S.ultimo ? Math.min(Math.max((t - S.ultimo) / 1000, 0.002), 0.05) : 0.016;
+    S.ultimo = t;
+
+    // gravidade (aponta "para cima" no padrão Android; iOS vem com o sinal trocado)
+    var sg = IOS ? -1 : 1, ax = g.x * sg, ay = g.y * sg, az = g.z * sg;
+    if (!S.tem) { S.gx = ax; S.gy = ay; S.gz = az; S.tem = true; }
+    else { S.gx += 0.12 * (ax - S.gx); S.gy += 0.12 * (ay - S.gy); S.gz += 0.12 * (az - S.gz); }
+    var n = Math.sqrt(S.gx * S.gx + S.gy * S.gy + S.gz * S.gz) || 1;
+    var ux = S.gx / n, uy = S.gy / n, uz = S.gz / n;
+
+    var wx = r.beta || 0, wy = r.gamma || 0, wz = r.alpha || 0;   // graus por segundo
+
+    if (S.calib) {                                  // medindo o "zero" do giroscópio
+      if (!S.calib.t0) S.calib.t0 = t;
+      S.calib.n++; S.calib.s[0] += wx; S.calib.s[1] += wy; S.calib.s[2] += wz;
+      if (t - S.calib.t0 > 1000 && S.calib.n > 5) {
+        S.bias = [S.calib.s[0] / S.calib.n, S.calib.s[1] / S.calib.n, S.calib.s[2] / S.calib.n];
+        S.calib = null; aviso('Pronto! Pode jogar.', 1200);
+      }
+      return;
+    }
+    wx -= S.bias[0]; wy -= S.bias[1]; wz -= S.bias[2];
+
+    // parado por ~0,75 s: reajusta o zero devagar (o giroscópio "anda" com a temperatura)
+    if (wx * wx + wy * wy + wz * wz < 0.64) {
+      if (++S.parado > 45) { S.bias[0] += 0.02 * wx; S.bias[1] += 0.02 * wy; S.bias[2] += 0.02 * wz; }
+    } else S.parado = 0;
+
+    if (S.pausado || !aberto || editando) return;
+
+    var giro = wx * ux + wy * uy + wz * uz;          // em torno da vertical do mundo
+    var hx = -uy, hy = ux, hn = Math.sqrt(hx * hx + hy * hy);   // eixo horizontal no plano da tela
+    var incl = hn > 0.05 ? (wx * hx + wy * hy) / hn : 0;
+    if (hn < 0.35) incl *= hn / 0.35;                // celular deitado: vertical perde força
+
+    // girar a "traseira" do celular para a esquerda = mouse para a esquerda; para cima = mouse para cima
+    mover((cfg.invH ? 1 : -1) * zona(giro) * dt * cfg.sensH,
+          (cfg.invV ? -1 : 1) * zona(incl) * dt * cfg.sensV);
+  }
+
+  function calibrar() {
+    S.calib = { n: 0, s: [0, 0, 0], t0: 0 }; S.ultimo = 0;
+    aviso('Deixe o celular PARADO por 1 segundo…');
+  }
+
+  function iniciarSensor() {
+    if (!window.isSecureContext || typeof DeviceMotionEvent === 'undefined') { mostrarInicio('seguro'); return; }
+    var pedir = (typeof DeviceMotionEvent.requestPermission === 'function')
+      ? DeviceMotionEvent.requestPermission() : Promise.resolve('granted');   // iOS pede permissão
+    pedir.then(function (r) {
+      if (r !== 'granted') { mostrarInicio('negado'); return; }
+      S.permitido = true; S.tem = false;
+      if (!S.ativo) { window.addEventListener('devicemotion', aoMover); S.ativo = true; }
+      $('#inicio').classList.remove('aberto');
+      acordar();
+      try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el); } catch (e) {}
+      calibrar();
+    }).catch(function () { mostrarInicio('negado'); });
+  }
+  function pararSensor() {
+    if (S.ativo) { window.removeEventListener('devicemotion', aoMover); S.ativo = false; }
+    S.calib = null; fecharAviso();
+  }
+
+  function mostrarInicio(tipo) {
+    var T = $('#inicioT'), P = $('#inicioP'), A = $('#inicioA');
+    A.innerHTML = '';
+    function bt(txt, fn, principal) {
+      var b = document.createElement('button'); b.textContent = txt; if (principal) b.className = 'principal';
+      b.addEventListener('click', fn); A.appendChild(b);
+    }
+    function irToque() { setModo('toque'); }
+    if (tipo === 'inicio') {
+      T.textContent = 'Modo sensor';
+      P.textContent = 'Segure o celular do jeito que vai jogar. Ao tocar em Iniciar, deixe-o parado por 1 segundo para calibrar.';
+      bt('Iniciar', iniciarSensor, true);
+    } else if (tipo === 'seguro') {
+      T.textContent = 'Falta o HTTPS';
+      P.textContent = 'O navegador só libera o giroscópio em páginas seguras (https). Abra a versão segura: vai aparecer um aviso de "conexão não particular"; toque em Avançado e depois em Continuar. É normal, o certificado é do seu próprio PC.';
+      bt('Abrir versão segura', function () {
+        fetch('/tls', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+          if (!d.portaTls) { aviso('O PC não criou o certificado. Veja o README.', 4000); return; }
+          location.href = 'https://' + location.hostname + ':' + d.portaTls + '/?t=' + encodeURIComponent(token || '');
+        }).catch(function () { aviso('Não consegui falar com o PC.', 3000); });
+      }, true);
+      bt('Usar toque', irToque);
+    } else {
+      T.textContent = 'Sensor bloqueado';
+      P.textContent = 'O navegador negou o acesso ao movimento. No iPhone: Ajustes › Safari › Movimento e orientação. Depois recarregue a página.';
+      bt('Tentar de novo', iniciarSensor, true);
+      bt('Usar toque', irToque);
+    }
+    $('#inicio').classList.add('aberto');
+  }
+
+  // ---------- botões da tela (posição livre, salva por orientação) ----------
+  var BOT = {
+    L: { txt: 'ESQUERDO', btn: 0 }, R: { txt: 'DIREITO', btn: 1 }, M: { txt: 'MEIO', btn: 2 },
+    U: { txt: '▲', rol: 1 }, D: { txt: '▼', rol: -1 }, P: { txt: 'PAUSA', pausa: true }
+  };
+  var LAYOUT_PADRAO = {   // x,y = centro (fração da área); w,h em "u" (1u = 1% do menor lado da área)
+    land: { L: { x: .84, y: .60, w: 34, h: 34 }, R: { x: .16, y: .60, w: 34, h: 34 }, M: { x: .84, y: .17, w: 24, h: 20 },
+            U: { x: .10, y: .17, w: 22, h: 20 }, D: { x: .26, y: .17, w: 22, h: 20 }, P: { x: .50, y: .80, w: 30, h: 18 } },
+    port: { L: { x: .50, y: .80, w: 88, h: 30 }, R: { x: .77, y: .50, w: 42, h: 24 }, M: { x: .23, y: .50, w: 42, h: 24 },
+            U: { x: .23, y: .17, w: 42, h: 22 }, D: { x: .77, y: .17, w: 42, h: 22 }, P: { x: .50, y: .33, w: 50, h: 14 } }
+  };
+  var salvoLay = {};
+  try { salvoLay = JSON.parse(lerLS('layout') || '{}'); } catch (e) {}
+  var jogo = $('#jogo'), editando = false, sel = null;
+  var els = {};
+
+  function orient() { return jogo.clientWidth > jogo.clientHeight ? 'land' : 'port'; }
+  function pos(id) {
+    var o = orient(), d = LAYOUT_PADRAO[o][id], s = (salvoLay[o] && salvoLay[o][id]) || {};
+    return { x: s.x !== undefined ? s.x : d.x, y: s.y !== undefined ? s.y : d.y, s: s.s !== undefined ? s.s : 1, w: d.w, h: d.h };
+  }
+  function aplicarLayout() {
+    var W = jogo.clientWidth, H = jogo.clientHeight, u = Math.min(W, H) / 100;
+    if (!W || !H) return;
+    for (var id in BOT) {
+      var p = pos(id), w = p.w * p.s * u, h = p.h * p.s * u, el = els[id];
+      el.style.width = w + 'px'; el.style.height = h + 'px';
+      el.style.left = Math.min(Math.max(p.x * W - w / 2, 0), W - w) + 'px';
+      el.style.top = Math.min(Math.max(p.y * H - h / 2, 0), H - h) + 'px';
+    }
+  }
+  function guardarPos(id, x, y, s) {
+    var o = orient(); salvoLay[o] = salvoLay[o] || {};
+    var a = salvoLay[o][id] || (salvoLay[o][id] = {});
+    if (x !== null) a.x = x; if (y !== null) a.y = y; if (s !== null) a.s = s;
+    gravarLS('layout', JSON.stringify(salvoLay));
+  }
+
+  var repetir = 0;
+  function notch(dir) { if (aberto) enviar2(3, 120 * dir, 0); }
+  function criarBotoes() {
+    Object.keys(BOT).forEach(function (id) {
+      var def = BOT[id], el = document.createElement('div');
+      el.className = 'gb' + (def.pausa ? ' pausa' : ''); el.textContent = def.txt; el.dataset.id = id;
+      jogo.appendChild(el); els[id] = el;
+      var arr = null;   // estado do arrasto (modo edição)
+
+      el.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); el.setPointerCapture(ev.pointerId);
+        if (editando) {
+          selecionar(id);
+          var r = jogo.getBoundingClientRect(), p = pos(id);
+          arr = { dx: ev.clientX - (r.left + p.x * r.width), dy: ev.clientY - (r.top + p.y * r.height) };
+          return;
+        }
+        el.classList.add('ativo');
+        if (def.btn !== undefined) { botao(def.btn, true); vibrar(); }
+        else if (def.rol) { notch(def.rol); vibrar(); clearInterval(repetir); repetir = setTimeout(function () { repetir = setInterval(function () { notch(def.rol); }, 100); }, 380); }
+        else if (def.pausa) S.pausado = true;
+      });
+      el.addEventListener('pointermove', function (ev) {
+        if (!editando || !arr) return;
+        ev.preventDefault();
+        var r = jogo.getBoundingClientRect();
+        var x = (ev.clientX - arr.dx - r.left) / r.width, y = (ev.clientY - arr.dy - r.top) / r.height;
+        guardarPos(id, Math.min(Math.max(x, 0.04), 0.96), Math.min(Math.max(y, 0.04), 0.96), null);
+        aplicarLayout();
+      });
+      function solta() {
+        arr = null;
+        if (editando) return;
+        el.classList.remove('ativo'); clearTimeout(repetir); clearInterval(repetir);
+        if (def.btn !== undefined) botao(def.btn, false);
+        else if (def.pausa) S.pausado = false;
+      }
+      el.addEventListener('pointerup', solta);
+      el.addEventListener('pointercancel', solta);
+    });
+    aplicarLayout();
+  }
+  function selecionar(id) {
+    sel = id;
+    for (var k in els) els[k].classList.toggle('sel', k === id);
+    $('#tamsel').value = pos(id).s;
+    $('#textoedit').textContent = 'Botão ' + BOT[id].txt + ': arraste para mover e use a barra para o tamanho.';
+  }
+  $('#tamsel').addEventListener('input', function () {
+    if (!sel) { aviso('Toque num botão primeiro.', 1500); return; }
+    guardarPos(sel, null, null, parseFloat(this.value)); aplicarLayout();
+  });
+  function editar(on) {
+    editando = on; jogo.classList.toggle('editando', on);
+    if (on) {
+      setModo('sensor', true); $('#inicio').classList.remove('aberto');
+      sel = null; for (var k in els) els[k].classList.remove('sel');
+      $('#textoedit').textContent = 'Arraste os botões para onde seus dedos ficam melhor. Toque em um para mudar o tamanho.';
+    } else if (cfg.modo === 'sensor' && !S.permitido) mostrarInicio('inicio');
+    aplicarLayout();
+  }
+  $('#edpronto').addEventListener('click', function () { editar(false); });
+  $('#edpadrao').addEventListener('click', function () { var o = orient(); delete salvoLay[o]; gravarLS('layout', JSON.stringify(salvoLay)); aplicarLayout(); });
+  window.addEventListener('resize', aplicarLayout);
+  window.addEventListener('orientationchange', function () { setTimeout(aplicarLayout, 200); });
+
+  // ---------- trocar de modo ----------
+  var app = $('#app');
+  function setModo(m, semSalvar) {
+    cfg.modo = m; if (!semSalvar) salvarCfg();
+    app.className = 'modo-' + m;
+    var bs = document.querySelectorAll('.modos button');
+    for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('sel', bs[i].dataset.modo === m);
+    soltarTudo();
+    if (m === 'sensor') {
+      aplicarLayout();
+      if (editando) return;
+      if (S.permitido) iniciarSensor(); else mostrarInicio('inicio');
+    } else {
+      pararSensor(); $('#inicio').classList.remove('aberto');
+    }
+  }
+  var mb = document.querySelectorAll('.modos button');
+  for (var i = 0; i < mb.length; i++) mb[i].addEventListener('click', function () { if (editando) return; setModo(this.dataset.modo); });
+
+  // =====================================================================
+  //  MODO TOQUE (touchpad)
+  // =====================================================================
   var pad = $('#pad'), dica = $('#dica');
-  var dedos = {}, n = 0;           // dedos ativos: id -> {x, y, t}
+  var dedos = {}, n = 0;
   var maxDedos = 0, inicio = 0, andou = 0, arrastando = false, ultimoToque = 0, ux = 0, uy = 0;
   var TOQUE_MS = 250, TOQUE_PX = 12, DUPLO_MS = 300, DUPLO_PX = 40;
 
   function gesto(ev) {
     var t = ev.timeStamp;
     if (n === 1 && maxDedos === 1) {
-      // um dedo: mover. Aceleração depende da velocidade do dedo.
-      var id = ev.pointerId, p = dedos[id];
+      var p = dedos[ev.pointerId];
       var evs = ev.getCoalescedEvents ? ev.getCoalescedEvents() : null;
       if (!evs || !evs.length) evs = [ev];
       for (var i = 0; i < evs.length; i++) {
@@ -257,12 +579,11 @@
         var dt = Math.min(Math.max(e.timeStamp - p.t, 4), 50);
         p.x = e.clientX; p.y = e.clientY; p.t = e.timeStamp;
         andou += Math.abs(dx) + Math.abs(dy);
-        var vel = Math.sqrt(dx * dx + dy * dy) / dt;           // px por ms
+        var vel = Math.sqrt(dx * dx + dy * dy) / dt;
         var ganho = cfg.sens * (1 + cfg.acel * Math.min(vel * 1.2, 3));
         mover(dx * ganho, dy * ganho);
       }
     } else if (n === 2) {
-      // dois dedos: rolar (usa a média do movimento dos dois)
       var p2 = dedos[ev.pointerId];
       var ddx = ev.clientX - p2.x, ddy = ev.clientY - p2.y;
       p2.x = ev.clientX; p2.y = ev.clientY; p2.t = t;
@@ -273,120 +594,96 @@
       if (p3) { p3.x = ev.clientX; p3.y = ev.clientY; }
     }
   }
-
   pad.addEventListener('pointerdown', function (ev) {
-    ev.preventDefault();
-    pad.setPointerCapture(ev.pointerId);
-    dica.classList.add('some');
+    ev.preventDefault(); pad.setPointerCapture(ev.pointerId); dica.classList.add('some');
     dedos[ev.pointerId] = { x: ev.clientX, y: ev.clientY, t: ev.timeStamp };
     n++;
     if (n === 1) {
-      pad.classList.add('ativo');
-      maxDedos = 1; inicio = ev.timeStamp; andou = 0;
-      // toque duplo + arrastar: segura o botão esquerdo
+      pad.classList.add('ativo'); maxDedos = 1; inicio = ev.timeStamp; andou = 0;
       if (cfg.toque && ev.timeStamp - ultimoToque < DUPLO_MS &&
-          Math.abs(ev.clientX - ux) < DUPLO_PX && Math.abs(ev.clientY - uy) < DUPLO_PX) {
-        arrastando = true; botao(0, true);
-      }
-    } else if (n > maxDedos) {
-      maxDedos = n;
-    }
+          Math.abs(ev.clientX - ux) < DUPLO_PX && Math.abs(ev.clientY - uy) < DUPLO_PX) { arrastando = true; botao(0, true); }
+    } else if (n > maxDedos) maxDedos = n;
   });
-
-  pad.addEventListener('pointermove', function (ev) {
-    if (!dedos[ev.pointerId]) return;
-    ev.preventDefault();
-    gesto(ev);
-  });
-
+  pad.addEventListener('pointermove', function (ev) { if (!dedos[ev.pointerId]) return; ev.preventDefault(); gesto(ev); });
   function fim(ev) {
     if (!dedos[ev.pointerId]) return;
-    delete dedos[ev.pointerId];
-    n--;
+    delete dedos[ev.pointerId]; n--;
     if (n > 0) return;
     pad.classList.remove('ativo');
     var dur = ev.timeStamp - inicio;
-    if (arrastando) {
-      botao(0, false); arrastando = false; ultimoToque = 0;
-    } else if (cfg.toque && ev.type === 'pointerup' && dur < TOQUE_MS && andou < TOQUE_PX) {
+    if (arrastando) { botao(0, false); arrastando = false; ultimoToque = 0; }
+    else if (cfg.toque && ev.type === 'pointerup' && dur < TOQUE_MS && andou < TOQUE_PX) {
       var b = maxDedos === 1 ? 0 : maxDedos === 2 ? 1 : 2;
       botao(b, true); botao(b, false); vibrar();
       if (b === 0) { ultimoToque = ev.timeStamp; ux = ev.clientX; uy = ev.clientY; } else ultimoToque = 0;
-    } else {
-      ultimoToque = 0;
-    }
+    } else ultimoToque = 0;
     maxDedos = 0;
   }
   pad.addEventListener('pointerup', fim);
   pad.addEventListener('pointercancel', fim);
 
-  // ---------- faixa de rolagem (um dedo) ----------
   var faixa = $('#rolagem'), faixaY = null;
-  faixa.addEventListener('pointerdown', function (ev) {
-    ev.preventDefault(); faixa.setPointerCapture(ev.pointerId); faixaY = ev.clientY; faixa.classList.add('ativo');
-  });
-  faixa.addEventListener('pointermove', function (ev) {
-    if (faixaY === null) return;
-    ev.preventDefault(); rolar(0, ev.clientY - faixaY); faixaY = ev.clientY;
-  });
+  faixa.addEventListener('pointerdown', function (ev) { ev.preventDefault(); faixa.setPointerCapture(ev.pointerId); faixaY = ev.clientY; faixa.classList.add('ativo'); });
+  faixa.addEventListener('pointermove', function (ev) { if (faixaY === null) return; ev.preventDefault(); rolar(0, ev.clientY - faixaY); faixaY = ev.clientY; });
   function fimFaixa() { faixaY = null; faixa.classList.remove('ativo'); }
   faixa.addEventListener('pointerup', fimFaixa);
   faixa.addEventListener('pointercancel', fimFaixa);
 
-  // ---------- botões físicos de tela ----------
   var apertados = {};
   [0, 1, 2].forEach(function (i) {
     var el = $('#b' + i);
-    el.addEventListener('pointerdown', function (ev) {
-      ev.preventDefault(); el.setPointerCapture(ev.pointerId);
-      apertados[i] = true; el.classList.add('ativo'); botao(i, true); vibrar();
-    });
-    function solta(ev) {
-      if (!apertados[i]) return;
-      apertados[i] = false; el.classList.remove('ativo'); botao(i, false);
-    }
-    el.addEventListener('pointerup', solta);
-    el.addEventListener('pointercancel', solta);
+    el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); el.setPointerCapture(ev.pointerId); apertados[i] = true; el.classList.add('ativo'); botao(i, true); vibrar(); });
+    function solta() { if (!apertados[i]) return; apertados[i] = false; el.classList.remove('ativo'); botao(i, false); }
+    el.addEventListener('pointerup', solta); el.addEventListener('pointercancel', solta);
   });
+
   function soltarTudo() {
-    dedos = {}; n = 0; maxDedos = 0; arrastando = false; px = py = 0;
+    dedos = {}; n = 0; maxDedos = 0; arrastando = false; px = py = 0; S.pausado = false;
     pad.classList.remove('ativo');
     [0, 1, 2].forEach(function (i) { apertados[i] = false; $('#b' + i).classList.remove('ativo'); });
+    for (var id in els) els[id].classList.remove('ativo');
+    clearTimeout(repetir); clearInterval(repetir);
   }
 
-  // impede zoom/rolagem/menus do navegador
   document.addEventListener('touchmove', function (e) { if (!$('#painel').classList.contains('aberto')) e.preventDefault(); }, { passive: false });
   document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  ['gesturestart', 'gesturechange'].forEach(function (nome) {
-    document.addEventListener(nome, function (e) { e.preventDefault(); });
-  });
+  ['gesturestart', 'gesturechange'].forEach(function (nome) { document.addEventListener(nome, function (e) { e.preventDefault(); }); });
 
   // ---------- painel de ajustes ----------
   var painel = $('#painel');
+  var SL = [['sensH', 'sensHV', 1], ['sensV', 'sensVV', 1], ['sens', 'sensV2', 1], ['acel', 'acelV', 2], ['rol', 'rolV', 1]];
+  var CK = [['invH', 'invH'], ['invV', 'invV'], ['nat', 'nat'], ['toque', 'toque2'], ['vib', 'vib']];
   function preencher() {
-    $('#sens').value = cfg.sens; $('#sensV').textContent = (+cfg.sens).toFixed(1);
-    $('#acel').value = cfg.acel; $('#acelV').textContent = (+cfg.acel).toFixed(2);
-    $('#rol').value = cfg.rol;   $('#rolV').textContent = (+cfg.rol).toFixed(1);
-    $('#nat').checked = cfg.nat; $('#toque').checked = cfg.toque; $('#vib').checked = cfg.vib;
+    SL.forEach(function (r) { $('#' + r[0]).value = cfg[r[0]]; $('#' + r[1]).textContent = (+cfg[r[0]]).toFixed(r[2]); });
+    CK.forEach(function (r) { $('#' + r[1]).checked = cfg[r[0]]; });
   }
-  [['sens', 'sensV', 1], ['acel', 'acelV', 2], ['rol', 'rolV', 1]].forEach(function (r) {
-    $('#' + r[0]).addEventListener('input', function () {
-      cfg[r[0]] = parseFloat(this.value); $('#' + r[1]).textContent = cfg[r[0]].toFixed(r[2]); salvarCfg();
-    });
+  SL.forEach(function (r) {
+    $('#' + r[0]).addEventListener('input', function () { cfg[r[0]] = parseFloat(this.value); $('#' + r[1]).textContent = cfg[r[0]].toFixed(r[2]); salvarCfg(); });
   });
-  ['nat', 'toque', 'vib'].forEach(function (k) {
-    $('#' + k).addEventListener('change', function () { cfg[k] = this.checked; salvarCfg(); });
-  });
+  CK.forEach(function (r) { $('#' + r[1]).addEventListener('change', function () { cfg[r[0]] = this.checked; salvarCfg(); }); });
   $('#engrenagem').addEventListener('click', function () { preencher(); painel.classList.add('aberto'); });
   $('#fechar').addEventListener('click', function () { painel.classList.remove('aberto'); });
-  $('#padrao').addEventListener('click', function () { for (var k in PADRAO) cfg[k] = PADRAO[k]; salvarCfg(); preencher(); });
+  $('#padrao').addEventListener('click', function () { var m = cfg.modo; for (var k in PADRAO) cfg[k] = PADRAO[k]; cfg.modo = m; salvarCfg(); salvoLay = {}; gravarLS('layout', '{}'); aplicarLayout(); preencher(); });
   $('#tela').addEventListener('click', function () {
-    var el = document.documentElement;
-    try { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {}
+    try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {}
     painel.classList.remove('aberto');
   });
+  $('#calib').addEventListener('click', function () {
+    painel.classList.remove('aberto');
+    if (S.ativo) calibrar(); else aviso('Inicie o modo sensor primeiro.', 2000);
+  });
+  $('#editar').addEventListener('click', function () { painel.classList.remove('aberto'); editar(true); });
 
+  // ---------- início ----------
+  criarBotoes();
   conectar();
+  acordar();
+  setModo(cfg.modo === 'toque' ? 'toque' : 'sensor', true);
+  // painéis com tamanho conhecido só depois do primeiro desenho
+  requestAnimationFrame(aplicarLayout);
+
+  // gancho de teste (não é usado pela página)
+  window.__cm = { S: S, cfg: cfg };
 })();
 </script>
 </body>

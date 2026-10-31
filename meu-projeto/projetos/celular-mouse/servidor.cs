@@ -15,9 +15,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Authentication;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 
@@ -111,18 +114,22 @@ namespace CelularMouse
         readonly string webDir;
         readonly string token;
         readonly IMouse mouse;
+        readonly X509Certificate2 cert;
         int porta;
+        int portaTls;
         int clientes;
 
-        public Servidor(string webDir, string token, IMouse mouse, int porta)
+        public Servidor(string webDir, string token, IMouse mouse, int porta, X509Certificate2 cert)
         {
             this.webDir = webDir;
             this.token = token;
             this.mouse = mouse;
             this.porta = porta;
+            this.cert = cert;
         }
 
         public int Porta { get { return porta; } }
+        public int PortaTls { get { return portaTls; } }
 
         // ---------- rede local ----------
 
@@ -176,36 +183,59 @@ namespace CelularMouse
 
         // ---------- laco principal ----------
 
-        public void Rodar()
+        static TcpListener Abrir(int inicio, int fim, out int usada)
         {
-            TcpListener listener = null;
-            for (int p = porta; p < porta + 10; p++)
+            for (int p = inicio; p <= fim; p++)
             {
                 try
                 {
-                    listener = new TcpListener(IPAddress.Any, p);
-                    listener.Start(16);
-                    porta = p;
-                    break;
+                    TcpListener l = new TcpListener(IPAddress.Any, p);
+                    l.Start(16);
+                    usada = p;
+                    return l;
                 }
-                catch (SocketException) { listener = null; }
+                catch (SocketException) { }
             }
-            if (listener == null) throw new Exception("Nao consegui abrir nenhuma porta entre " + porta + " e " + (porta + 9) + ".");
+            usada = 0;
+            return null;
+        }
 
+        void Escutar(TcpListener listener, bool tls)
+        {
             while (true)
             {
                 TcpClient c;
                 try { c = listener.AcceptTcpClient(); }
                 catch (Exception) { break; }
-                Thread t = new Thread(delegate () { Atender(c); });
+                Thread t = new Thread(delegate () { Atender(c, tls); });
                 t.IsBackground = true;
                 t.Start();
             }
         }
 
+        public void Rodar()
+        {
+            TcpListener http = Abrir(porta, porta + 9, out porta);
+            if (http == null) throw new Exception("Nao consegui abrir nenhuma porta de rede (8765-8774).");
+
+            if (cert != null)
+            {
+                int pt;
+                TcpListener https = Abrir(porta + 1, porta + 20, out pt);
+                if (https != null)
+                {
+                    portaTls = pt;
+                    Thread th = new Thread(delegate () { Escutar(https, true); });
+                    th.IsBackground = true;
+                    th.Start();
+                }
+            }
+            Escutar(http, false);
+        }
+
         // ---------- HTTP ----------
 
-        static byte[] LerCabecalho(NetworkStream s)
+        static byte[] LerCabecalho(Stream s)
         {
             MemoryStream ms = new MemoryStream();
             byte[] b = new byte[2048];
@@ -229,7 +259,7 @@ namespace CelularMouse
             return null;
         }
 
-        static void Responder(NetworkStream s, int codigo, string status, string tipo, byte[] corpo)
+        static void Responder(Stream s, int codigo, string status, string tipo, byte[] corpo)
         {
             string cab = "HTTP/1.1 " + codigo + " " + status + "\r\n" +
                 "Content-Type: " + tipo + "\r\n" +
@@ -241,7 +271,7 @@ namespace CelularMouse
             s.Write(corpo, 0, corpo.Length);
         }
 
-        static void Texto(NetworkStream s, int codigo, string status, string msg)
+        static void Texto(Stream s, int codigo, string status, string msg)
         {
             Responder(s, codigo, status, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(msg));
         }
@@ -255,6 +285,7 @@ namespace CelularMouse
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("{\"porta\":").Append(porta);
+            sb.Append(",\"portaTls\":").Append(portaTls);
             sb.Append(",\"token\":").Append(Json(token));
             sb.Append(",\"clientes\":").Append(clientes);
             sb.Append(",\"enderecos\":[");
@@ -269,16 +300,17 @@ namespace CelularMouse
             return sb.ToString();
         }
 
-        void Arquivo(NetworkStream s, string nome, string tipo)
+        void Arquivo(Stream s, string nome, string tipo)
         {
             string caminho = Path.Combine(webDir, nome);
             if (!File.Exists(caminho)) { Texto(s, 404, "Not Found", "Arquivo nao encontrado: " + nome); return; }
             Responder(s, 200, "OK", tipo, File.ReadAllBytes(caminho));
         }
 
-        void Atender(TcpClient c)
+        void Atender(TcpClient c, bool tls)
         {
             string remoto = "?";
+            Stream flujo = null;
             bool contou = false;
             bool[] segurando = new bool[3];
             try
@@ -288,7 +320,15 @@ namespace CelularMouse
                 IPEndPoint ep = (IPEndPoint)c.Client.RemoteEndPoint;
                 remoto = ep.Address.ToString();
                 bool local = IPAddress.IsLoopback(ep.Address);
-                NetworkStream s = c.GetStream();
+                Stream s = c.GetStream();
+                if (tls)
+                {
+                    // HTTPS: necessario para o navegador liberar o giroscopio.
+                    SslStream ssl = new SslStream(s, false);
+                    ssl.AuthenticateAsServer(cert, false, SslProtocols.Tls12, false);
+                    s = ssl;
+                }
+                flujo = s;
 
                 byte[] raw = LerCabecalho(s);
                 if (raw == null) return;
@@ -331,6 +371,7 @@ namespace CelularMouse
                 }
 
                 if (caminho == "/") Arquivo(s, "index.html", "text/html; charset=utf-8");
+                else if (caminho == "/tls") Responder(s, 200, "OK", "application/json; charset=utf-8", Encoding.UTF8.GetBytes("{\"portaTls\":" + portaTls + "}"));
                 else if (caminho == "/qrcode.js") Arquivo(s, "qrcode.js", "application/javascript; charset=utf-8");
                 else if (caminho == "/qr" || caminho == "/info")
                 {
@@ -351,6 +392,7 @@ namespace CelularMouse
                     Interlocked.Decrement(ref clientes);
                     Console.WriteLine("  Celular desconectou: " + remoto);
                 }
+                try { if (flujo != null) flujo.Close(); } catch (Exception) { }
                 try { c.Close(); } catch (Exception) { }
             }
         }
@@ -388,7 +430,7 @@ namespace CelularMouse
             s.Write(q, 0, q.Length);
         }
 
-        void LacoWebSocket(NetworkStream s, bool[] segurando)
+        void LacoWebSocket(Stream s, bool[] segurando)
         {
             byte[] cab = new byte[8];
             byte[] mascara = new byte[4];
@@ -467,6 +509,35 @@ namespace CelularMouse
             return sb.ToString();
         }
 
+        // Windows: certificado criado pelo servidor.ps1 na loja do usuario.
+        // Fallback (e testes fora do Windows): arquivo cert.pfx na pasta.
+        static X509Certificate2 CarregarCertificado(string dir)
+        {
+            try
+            {
+                X509Store st = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                st.Open(OpenFlags.ReadOnly);
+                X509Certificate2 melhor = null;
+                foreach (X509Certificate2 c in st.Certificates)
+                {
+                    if (c.Subject == "CN=Celular Mouse" && c.HasPrivateKey && c.NotAfter > DateTime.Now.AddDays(1))
+                    {
+                        if (melhor == null || c.NotAfter > melhor.NotAfter) melhor = c;
+                    }
+                }
+                st.Close();
+                if (melhor != null) return melhor;
+            }
+            catch (Exception) { }
+            try
+            {
+                string pfx = Path.Combine(dir, "cert.pfx");
+                if (File.Exists(pfx)) return new X509Certificate2(pfx, "celular-mouse");
+            }
+            catch (Exception) { }
+            return null;
+        }
+
         public static void Executar(string dir, int porta, bool abrirNavegador)
         {
             bool windows = Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -474,7 +545,8 @@ namespace CelularMouse
             if (windows) mouse = new WindowsMouse(); else mouse = new LogMouse();
 
             string token = LerOuCriarToken(dir);
-            Servidor srv = new Servidor(Path.Combine(dir, "web"), token, mouse, porta);
+            X509Certificate2 cert = CarregarCertificado(dir);
+            Servidor srv = new Servidor(Path.Combine(dir, "web"), token, mouse, porta, cert);
 
             // O servidor precisa abrir a porta antes de mostrarmos os enderecos.
             Thread t = new Thread(delegate ()
@@ -491,11 +563,17 @@ namespace CelularMouse
             Console.WriteLine("   CELULAR MOUSE  -  servidor ligado");
             Console.WriteLine("  ==============================================");
             Console.WriteLine();
-            Console.WriteLine("  No celular (mesmo Wi-Fi do PC), abra um destes enderecos");
-            Console.WriteLine("  ou escaneie o QR code da janela do navegador:");
+            Console.WriteLine("  No celular (mesmo Wi-Fi do PC), escaneie o QR code da janela");
+            Console.WriteLine("  do navegador, ou abra um destes enderecos:");
             Console.WriteLine();
             foreach (Servidor.Endereco e in Servidor.EnderecosLocais())
-                Console.WriteLine("    http://" + e.Ip + ":" + srv.Porta + "/?t=" + token + "   (" + e.Nome + ")");
+            {
+                if (srv.PortaTls > 0)
+                    Console.WriteLine("    COM SENSOR (jogos): https://" + e.Ip + ":" + srv.PortaTls + "/?t=" + token + "   (" + e.Nome + ")");
+                Console.WriteLine("    So toque:           http://" + e.Ip + ":" + srv.Porta + "/?t=" + token + "   (" + e.Nome + ")");
+            }
+            if (srv.PortaTls == 0)
+                Console.WriteLine("\n  AVISO: sem certificado HTTPS, o modo sensor nao vai funcionar.");
             Console.WriteLine();
             Console.WriteLine("  Para encerrar: feche esta janela ou aperte Ctrl+C.");
             Console.WriteLine();

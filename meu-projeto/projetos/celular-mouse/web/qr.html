@@ -25,6 +25,9 @@
   #estado i { width: 10px; height: 10px; border-radius: 50%; background: #d29922; }
   #estado.ok { color: var(--txt); border-color: var(--ok); }
   #estado.ok i { background: var(--ok); }
+  #abas { display: flex; gap: 8px; margin: 0 0 18px; }
+  #abas button { font: inherit; font-size: 15px; color: var(--suave); background: var(--card); border: 1px solid var(--borda); border-radius: 12px; padding: 10px 16px; cursor: pointer; }
+  #abas button.sel { color: var(--txt); border-color: var(--acento); }
   #redes { margin: 18px 0 0; display: flex; gap: 8px; flex-wrap: wrap; }
   #redes button { font: inherit; font-size: 14px; color: var(--txt); background: var(--card); border: 1px solid var(--borda); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
   #redes button.sel { border-color: var(--acento); }
@@ -37,10 +40,12 @@
   <section>
     <h1>Celular Mouse</h1>
     <p>Seu celular vira o mouse deste computador.</p>
+    <div id="abas"></div>
     <ol>
       <li>Conecte o celular no <b>mesmo Wi-Fi</b> deste PC.</li>
       <li>Abra a <b>câmera</b> do celular e aponte para o QR code.</li>
-      <li>Toque no link. Pronto, é só arrastar o dedo.</li>
+      <li>Toque no link.</li>
+      <li id="passoSeguro">O navegador vai avisar <b>"conexão não é particular"</b>. É normal (o certificado é do seu PC): toque em <b>Avançado</b> e depois em <b>Continuar</b>.</li>
     </ol>
     <div id="estado"><i></i><span>Aguardando o celular…</span></div>
     <div id="redes"></div>
@@ -51,11 +56,25 @@
 <script src="/qrcode.js"></script>
 <script>
 (function () {
-  var info = null, sel = 0;
+  var info = null, sel = 0, seguro = true;
   var qr = document.getElementById('qr'), urlEl = document.getElementById('url');
   var estado = document.getElementById('estado'), redes = document.getElementById('redes');
 
-  function link(e) { return 'http://' + e.ip + ':' + info.porta + '/?t=' + info.token; }
+  function link(e) {
+    if (seguro && info.portaTls) return 'https://' + e.ip + ':' + info.portaTls + '/?t=' + info.token;
+    return 'http://' + e.ip + ':' + info.porta + '/?t=' + info.token;
+  }
+  function abas() {
+    var a = document.getElementById('abas'); a.innerHTML = '';
+    document.getElementById('passoSeguro').style.display = (seguro && info.portaTls) ? '' : 'none';
+    if (!info.portaTls) { seguro = false; return; }
+    [[true, 'Com sensor (jogos)'], [false, 'Só toque na tela']].forEach(function (o) {
+      var b = document.createElement('button'); b.textContent = o[1];
+      if (seguro === o[0]) b.className = 'sel';
+      b.onclick = function () { seguro = o[0]; abas(); desenhar(); };
+      a.appendChild(b);
+    });
+  }
 
   function desenhar() {
     if (!info.enderecos.length) {
@@ -82,7 +101,7 @@
     fetch('/info', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
       var mudou = !info || JSON.stringify(info.enderecos) !== JSON.stringify(d.enderecos);
       info = d;
-      if (mudou) { if (sel >= d.enderecos.length) sel = 0; desenhar(); }
+      if (mudou) { if (sel >= d.enderecos.length) sel = 0; abas(); desenhar(); }
       var ok = d.clientes > 0;
       estado.className = ok ? 'ok' : '';
       estado.querySelector('span').textContent = ok ? 'Celular conectado ✓' : 'Aguardando o celular…';

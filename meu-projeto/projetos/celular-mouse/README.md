@@ -1,90 +1,129 @@
 # Celular Mouse
 
 ## Objetivo
-Usar o celular como mouse/touchpad do PC Windows, com latência mínima e sem
-instalar nada: nem no PC, nem no celular (o celular usa só o navegador).
+Usar o celular como mouse do PC Windows, com latência mínima e sem instalar
+nada (o celular usa só o navegador). Dois modos:
+
+- **Sensor (para jogar):** você *move o celular no ar* e o cursor acompanha,
+  como um mouse aéreo / mira por giroscópio. A tela só tem botões, nos
+  lugares onde seus dedos ficam.
+- **Toque:** a tela do celular vira um touchpad.
 
 ## Status
-`em andamento` — código pronto e testado na nuvem (protocolo, gestos,
-segurança). Falta o primeiro teste real no PC Windows.
+`em andamento` — modo toque testado em uso real no PC. Modo sensor testado na
+nuvem com movimentos simulados; **falta o primeiro teste real** (giroscópio do
+seu celular + HTTPS no Windows).
 
 ## Como rodar
 1. No PC, dê **duplo clique em `iniciar.bat`** (pasta `projetos\celular-mouse`).
-2. Abre uma janela do navegador com um **QR code**. Na primeira vez o Windows
-   pergunta sobre o Firewall: marque **Redes particulares** e clique em
-   **Permitir acesso**.
-3. No celular (no **mesmo Wi-Fi**), abra a câmera, aponte para o QR code e
-   toque no link. Pronto.
+   Na primeira vez ele cria um certificado local (alguns segundos) e o Windows
+   pergunta sobre o Firewall: marque **Redes particulares** e **Permitir acesso**.
+2. Abre uma janela com um **QR code**. Deixe a aba **"Com sensor (jogos)"**.
+3. No celular (mesmo Wi-Fi), aponte a câmera para o QR code e toque no link.
+4. O navegador avisa **"conexão não é particular"**. É normal (o certificado é
+   do seu próprio PC; o giroscópio só funciona em páginas https). Toque em
+   **Avançado** e depois em **Continuar**. Só na primeira vez.
+5. Toque em **Iniciar**, deixe o celular parado por 1 segundo (calibração) e
+   pronto: gire o celular.
 
-Dica: no celular, "Adicionar à tela inicial" no menu do navegador cria um
-ícone. Da próxima vez, é só rodar `iniciar.bat` e tocar no ícone (o endereço
-só muda se o IP do PC mudar; aí escaneie o QR de novo).
+Dica: no menu do navegador, "Adicionar à tela inicial" cria um ícone.
 
-## Gestos
+## Modo sensor: como funciona
+- **Girar para os lados** move o cursor na horizontal; **inclinar para cima/baixo**
+  move na vertical. Você mira com a **traseira** do celular, como se ele
+  fosse uma janela: apontou a traseira para a esquerda, o mouse vai para a
+  esquerda. Funciona em pé, de lado (paisagem) ou deitado.
+- Se alguma direção ficar ao contrário: ⚙ → **Inverter horizontal/vertical**.
+- **PAUSA** (segurar) congela o cursor, como levantar o mouse da mesa: use
+  para voltar o celular à posição confortável sem mover a mira.
+- O giroscópio tem um pequeno "desvio" com o tempo. Ele se corrige sozinho
+  quando o celular fica parado; se a mira "andar", use ⚙ → **Calibrar agora**.
+- A tela do celular não apaga enquanto você usa (Wake Lock).
 
+### Botões: você escolhe onde ficam
+⚙ → **Mudar botões de lugar**: arraste cada botão para onde seus dedos ficam
+melhor e use a barra para mudar o tamanho (toque no botão para selecioná-lo).
+O layout é guardado separado para celular em pé e deitado.
+
+| Botão | O que faz |
+|---|---|
+| ESQUERDO / DIREITO / MEIO | Cliques (dá para segurar) |
+| ▲ / ▼ | Roda do mouse (segurando, repete) — troca de arma, zoom |
+| PAUSA | Segurar = congela o cursor |
+
+Ajustes (⚙): sensibilidade horizontal e vertical, inversão, calibrar, botões.
+
+## Modo toque
 | Gesto | O que faz |
 |---|---|
 | Arrastar 1 dedo | Move o cursor |
 | Tocar | Clique esquerdo |
-| Tocar com 2 dedos | Clique direito |
-| Tocar com 3 dedos | Clique do meio |
-| Arrastar 2 dedos (ou a faixa ROLAR) | Rolar (vertical e horizontal) |
-| Tocar, tocar de novo e arrastar | Segurar e arrastar (selecionar, mover janela) |
-| Botões ESQUERDO / MEIO / DIREITO | Botões do mouse (dá para segurar e mexer com a outra mão) |
+| Tocar com 2 / 3 dedos | Clique direito / do meio |
+| Arrastar 2 dedos (ou a faixa ROLAR) | Rolar |
+| Tocar, tocar de novo e arrastar | Segurar e arrastar |
 
-Engrenagem (⚙): velocidade, aceleração, rolagem, tocar para clicar, vibração.
-O número ao lado de "Conectado" é o tempo de ida e volta até o PC, em ms.
+## Se não funcionar
+- **Não conecta:** celular e PC na mesma rede. Wi-Fi de visitantes ou
+  "isolamento de clientes" bloqueia; alternativa: ligar o hotspot do celular e
+  conectar o PC nele. Rede do Windows como "Pública" bloqueia: mude para
+  "Particular" ou rode `liberar-firewall.bat` (pede administrador).
+- **Mostra "Falta o HTTPS":** abriu o link http. Use o QR da aba "Com sensor".
+  Se o PC não conseguiu criar o certificado, o `iniciar.bat` mostra um aviso
+  amarelo; me mande o texto.
+- **Sensor bloqueado (iPhone):** Ajustes › Safari › Movimento e orientação.
+- **Mais de um endereço no QR:** clique no botão da rede Wi-Fi certa.
+- **Trocar a senha do link:** apague o arquivo `.token` e rode de novo.
+- **Jogo ignora o mouse:** alguns jogos/anti-cheat bloqueiam entrada
+  simulada, e janelas abertas "como administrador" também (rode o
+  `iniciar.bat` como administrador nesse caso).
+- **Cursor rápido/lento demais:** ⚙ sensibilidade. A aceleração de ponteiro
+  do Windows também vale no desktop; em jogos, desligue
+  "Aprimorar precisão do ponteiro" nas opções do mouse.
 
-## Se não conectar
-- Celular e PC precisam estar na mesma rede. Wi-Fi de visitantes ou
-  "isolamento de clientes" do roteador bloqueia. Alternativa: ligar o
-  roteador do celular (hotspot) e conectar o PC nele.
-- Rede do Windows como "Pública" bloqueia: mude para "Particular" ou rode
-  `liberar-firewall.bat` (pede permissão de administrador).
-- O QR mostra mais de um endereço? Clique no botão da rede certa (Wi-Fi).
-- Trocar a senha do link (invalida o QR antigo): apague o arquivo `.token`
-  e rode de novo.
-
-## Como é rápido
-- Conexão WebSocket direta celular -> PC, mensagens binárias de 5 bytes.
-- `TCP_NODELAY` ligado (sem espera de Nagle) no servidor.
-- Cada evento de toque vira uma mensagem na hora, sem fila: se a rede
-  engarrafar, os movimentos são somados em vez de empilhados, então o cursor
-  nunca "se arrasta" atrasado.
-- O PC injeta o movimento direto com `SendInput`, sem intermediários.
-- Medido na nuvem (localhost): ~0,1 ms de processamento no servidor. O resto
-  é o Wi-Fi (tipicamente 2–10 ms; 5 GHz e perto do roteador é melhor).
+## Latência
+- Conexão WebSocket direta (https/wss), mensagens binárias de 5 bytes,
+  `TCP_NODELAY`, sem fila: se a rede engarrafar, os movimentos são somados em
+  vez de empilhados.
+- O PC injeta o movimento direto com `SendInput`.
+- Medido na nuvem (localhost, com TLS): menos de 1 ms no servidor.
+- **Limite do sensor:** o navegador entrega o giroscópio a ~60 vezes por
+  segundo (≈ 16 ms entre leituras). Somado ao Wi-Fi (2–10 ms), fica na casa de
+  20–30 ms. Para jogo competitivo, Wi-Fi 5 GHz e perto do roteador ajuda muito.
 
 ## Estrutura
 | Arquivo | Para que serve |
 |---|---|
 | `iniciar.bat` | Duplo clique para ligar |
-| `servidor.ps1` | Compila e inicia o servidor (PowerShell já vem no Windows) |
-| `servidor.cs` | O servidor: HTTP + WebSocket + `SendInput` |
-| `web/index.html` | A tela do celular (touchpad, gestos, ajustes) |
-| `web/qr.html`, `web/qrcode.js` | Página do QR no PC (biblioteca `qrcode-generator`, MIT) |
-| `liberar-firewall.bat` | Opcional: libera a porta no Firewall |
+| `servidor.ps1` | Cria o certificado local, compila e inicia o servidor |
+| `servidor.cs` | Servidor: HTTP + HTTPS + WebSocket + `SendInput` |
+| `web/index.html` | Tela do celular (sensor, toque, botões, ajustes) |
+| `web/qr.html`, `web/qrcode.js` | Página do QR no PC (`qrcode-generator`, MIT) |
+| `liberar-firewall.bat` | Opcional: libera as portas 8765-8774 no Firewall |
 
 ## Segurança
 - Só quem tem o link com a senha (`?t=...`, gerada no PC, guardada em
-  `.token` e fora do Git) consegue controlar o mouse. O QR só abre no próprio PC.
-- Não há criptografia (HTTP simples na rede local): use em redes de confiança.
-- Limite do Windows: não controla janelas abertas "como administrador" nem a
-  tela de bloqueio/UAC, a menos que o `iniciar.bat` também rode como administrador.
+  `.token`, fora do Git) controla o mouse. O QR só abre no próprio PC.
+- O HTTPS usa certificado do próprio PC (CN=Celular Mouse, na loja do seu
+  usuário do Windows). Protege a conversa na rede, mas o navegador do celular
+  não "confia" nele, por isso o aviso. Use em redes de confiança.
+- Limite do Windows: não controla janelas "como administrador" nem a tela de
+  bloqueio/UAC, a menos que o `iniciar.bat` rode como administrador.
 
 ## Decisões e anotações
-- 2026-10-31: servidor em C# compilado pelo PowerShell (zero instalação) em
-  vez de Python/Node, porque o usuário prefere evitar terminal e instalações.
+- 2026-10-31: servidor em C# compilado pelo PowerShell (zero instalação).
   Código em C# 5 por causa do PowerShell 5.1.
-- Cliente é página web, não app: nada para instalar no celular.
-- Movimento relativo por `SendInput`; a aceleração do próprio Windows também
-  vale. Se ficar rápido/lento demais, ajuste em ⚙.
-- Testado na nuvem com Mono (compilação C# 5, protocolo, token, soltar botão
-  ao desconectar) e Chromium com toques simulados. **Não testado** no Windows
-  real: `SendInput`, descoberta de IP e o Firewall.
+- 2026-10-31: modo sensor com `devicemotion` (giroscópio + gravidade).
+  A velocidade de giro é projetada na gravidade, então não depende da
+  orientação da tela. Exige HTTPS (regra dos navegadores); por isso o
+  certificado local e a porta 8766.
+- Movimento por `SendInput` relativo (também chega como entrada bruta nos jogos).
+- Testado na nuvem (Mono + Chromium com sensores simulados): direção do
+  cursor em pé/de lado/deitado, calibração, pausa, botões, edição de layout,
+  HTTPS/wss. **Não testado:** `SendInput`/certificado no Windows e o
+  giroscópio de um celular real.
 
 ## Próximos passos
-- [ ] Testar no PC real e ajustar velocidade/aceleração padrão.
-- [ ] Teclado (digitar texto pelo celular).
-- [ ] Modo giroscópio (apontar o celular), exige HTTPS no celular.
-- [ ] Manter a tela do celular acordada (Wake Lock/NoSleep).
+- [ ] Testar no PC e no celular reais; ajustar sensibilidade padrão e sinais.
+- [ ] Menos latência: API `Gyroscope` do Chrome (taxa maior que 60 Hz).
+- [ ] Teclado (WASD / digitar) no celular.
+- [ ] Mais botões configuráveis (teclas extras para jogos).
